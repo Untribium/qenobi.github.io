@@ -1,0 +1,26 @@
+[
+	{
+		"id": "core.relation",
+		"title": "Relation",
+		"inputs": [
+			{
+				"type": "relation",
+				"list": false,
+				"input": false,
+				"text": "Relation"
+			}
+		]
+	},
+	{
+		"id": "core.condition",
+		"title": "Condition",
+		"inputs": [
+			{
+				"type": "relation",
+				"list": false,
+				"input": true,
+				"text": "Relation 1"
+			}
+		]
+	}
+]

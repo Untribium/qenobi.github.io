@@ -1,0 +1,126 @@
+html {
+	height: 100%;
+}
+
+body {
+	height: 100%;
+	padding: 0;
+	margin: 0;
+}
+
+/*menubar*/
+.navbar {
+	width: 100%;
+	height: 50px;
+	background-color: hsla(80, 60%, 40%, 1);
+}
+
+.logo p {
+	float: left;
+	padding: 0;
+	margin: 0;
+	font-family: "Khand", sans-serif;
+	font-weight: 600;
+	font-size: 34px;
+	color: #FFF;
+	padding: 15px 40px 15px 8px;
+	line-height: 20px;
+}
+
+.no-select {
+	-moz-user-select: none;
+	-webkit-user-select: none;
+	-ms-user-select:none;
+	user-select:none;
+	-o-user-select:none;
+	cursor: default;
+}
+
+.menubar ul {
+	float: left;
+	list-style: none;
+	margin: 0;
+	padding: 0;
+}
+
+.menubar li {
+	float: left;
+}
+
+.menubar li p {
+	font-family: "PT Sans", sans-serif;
+	font-weight: 400;
+	font-size: 14px;
+	margin: 0;
+	padding: 15px;
+	line-height: 20px;
+	color: rgba(255, 255, 255, 0.85);
+	cursor: pointer;
+	transition: color 0.1s ease-in-out;
+}
+
+.menubar li p:hover {
+	color: rgba(255, 255, 255, 1.0);
+}
+
+/* main container */
+.slate {
+	position: absolute;
+	width: 100%;
+	top: 50px;
+	bottom: 0px;
+	background-color: #FFF;
+	overflow: auto;
+}
+
+.node {
+	/*position*/
+	position: absolute;
+	width: 100px;
+	/*height: 130px;*/
+	left: 50px;
+	top: 50px;
+	padding: 7px 5px 5px 5px;
+
+	/*color*/
+	background-color: white;
+	filter: alpha(opacity=100);
+	opacity: 1.0;
+
+	/*border*/
+	border: solid 1px hsla(0, 0%, 60%, 1);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+	filter: alpha(opacity=85);
+	opacity: 0.85;
+
+	/*transistion*/
+	transition: box-shadow 0.1s ease-in, opacity 0.1s ease-in-out;
+	-webkit-transition: -webkit-box-shadow 0.1s ease-in, opacity 0.1s ease-in-out;
+}
+
+.node:hover {
+	z-index: 1000;
+
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+
+	filter: alpha(opacity=100);
+	opacity: 1.0;
+}
+
+.header {
+	line-height: 10px;
+	height: 20px;
+}
+
+.header p {
+	float: left;
+	margin: 0;
+	font-family: "PT Sans", sans-serif;
+	font-weight: 600;
+	font-size: 14px;
+}
+
+.header .fa-cog {
+	float: right;
+	line-height: 10px;
+}
