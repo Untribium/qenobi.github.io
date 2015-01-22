@@ -21,64 +21,20 @@ jsPlumb.ready(function() {
 		//binding
 	});
 
-	console.log("---RESOURCES---");
+	container.addEventListener("mousedown", function(e) {click(e);});
 
-	console.log("load core nodes");
-
-	getJSON("resources/core.json", function(response) {/*node_types.concat(response)*/node_types = response});
 
 });
 
-function add_node(type) {
-	var node = document.createElement("div");
-	node.className += " node";
-	node.id = "node_"+node_counter;
+function click(e) {
+	console.log(e);
+	//alert(e.x);
+}
 
+function addNode(node) {
 
-	populate_node(node, type);
-
-	container.appendChild(node);
-	instance.draggable(node);
+	instance.draggable(node.element);
+	container.appendChild(node.element);
 
 	node_counter++;
-}
-
-function populate_node(node, type) {
-	
-	var header = document.createElement("div");
-	header.className += " header";
-
-	var title = document.createElement("p");
-	title.innerHTML = "title";
-	header.appendChild(title);
-
-	var settings = document.createElement("i");
-	settings.className = "fa fa-cog";
-	settings.onclick = function(){alert("settings");};
-	header.appendChild(settings);
-
-	node.appendChild(header);
-
-	title.innerHTML = node_types[type].title;
-
-
-}
-
-function createRow() {
-	var row = document.createElement("div");
-	row.className += " row";
-}
-
-function getJSON(url, callback) {
-    var request = new XMLHttpRequest();
-    request.open("GET", url, false);
-    request.setRequestHeader("Content-type", "application/json");
-
-    request.onreadystatechange = function() {
-        if(request.readyState == 4 && request.status == 200) {
-        	var response = JSON.parse(request.responseText);
-			callback(response);
-		}
-	}
-	request.send();
 }
