@@ -52,8 +52,13 @@
                 <!-- /JS -->
 
                 <script src="util.js"></script>
+                <script src="data.js"></script>
+                <script src="UI.js"></script>
                 <script src="node.js"></script>
+                <script src="parameter.js"></script>
+                <script src="endpoint.js"></script>
                 <script src="main.js"></script>
+                <script src="sample.js"></script>
 	
         </head>
 	<body>
@@ -61,11 +66,13 @@
 			<div class="logo"><p>QENoBI</p></div>
                         <div class="menubar">
                                 <ul>
-                                        <li onclick="addNode(new Relation(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Relation</p></li>
-                                        <li onclick="addNode(new Condition(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Condition</p></li>
+                                        <li onclick="addNode(new Table(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Table</p></li>
+                                        <li onclick="addNode(new Constraint(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Constraint</p></li>
+                                        <li onclick="addNode(new Output(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Output</p></li>
+                                        <li onclick="addNode(new Aggregation(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Aggregation</p></li>
                                 </ul>
                         </div>
 		</div>
-		<div class="slate" id="main_slate"></div>
+		<div class="container" id="container"></div>
 	</body>
 </html>

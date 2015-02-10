@@ -1,175 +1,244 @@
+/*Nodes*/
+
 var Node = (function() {
 	
+	Node.prototype.id;
+	Node.prototype.element;
+	Node.prototype.title;
+
+	Node.prototype.output;
+	Node.prototype.parameters;
+
+	Node.prototype.dependents;
+
+	Node.prototype.trace;
+	Node.prototype.schema;
+	Node.prototype.query;
+
 	function Node(id) {
 		this.id = id;
-		this.element;
-		this.title;
 
-		//set of all nodes on paths from input to this node (used to avoid circular dependencies)
-		this.trace;
-		//set of all attributes in the output relation
-		this.attributes;
-		//number of rows (any, single or specific (for conditions on same relation))
-		this.cardinality;
+		this.dependents = [];
+		this.parameters = [];
 
-		this.init();
-
-		this.createElement();
+		this.output = new Source(this);
 	}
 
-	/*override in subclass*/
-	Node.prototype.init = function() {
-		concole.log("'init' not overwritten");
+	Node.prototype.buildUI = function() {
+		this.element = new UINode(this, this.title);
+		this.element.setOutput(this.output.buildUI());
+
+		for(var i = 0; i < this.parameters.length; i++) {
+			this.element.append(this.parameters[i].buildUI());
+		}
+
+		this.notify();
+
+		return this.element;
 	}
 
-	Node.prototype.createElement = function() {
-		this.createNode();
-		this.createHeader();
-		this.createSettings();
-		this.createContent();
+	Node.prototype.getUI = function() {
+		return this.element;
 	}
 
-	Node.prototype.createNode = function() {
-		this.element = document.createElement("div");
-		addClass(this.element, "node");
-		this.element.id = "node_"+this.id;
+	Node.prototype.getQuery = function() {
+		return this.query;
 	}
 
-	Node.prototype.createHeader = function() {
-		var el_header = document.createElement("div");
-		addClass(el_header, "node-header");
-
-		var el_title = document.createElement("p");
-		el_title.innerHTML = this.title;
-		addClass(el_title, "no-select");
-		el_header.appendChild(el_title);
-
-		var el_source = document.createElement("div");
-		addClass(el_source, "endpoint");
-		el_header.appendChild(el_source);
-
-		instance.makeSource(el_source, {
-			anchor:"Right",
-			endpoint:"Blank",
-			maxConnections:3
-		});
-
-		var el_settings = getIcon("cog");
-		el_settings.addEventListener("click", this.toggleSettings.bind(this));
-		el_header.appendChild(el_settings);
-
-		this.element.appendChild(el_header);
+	Node.prototype.getSchema = function() {
+		return this.schema;
 	}
 
-	Node.prototype.createSettings = function() {
-		var el_settings = document.createElement("div");
-		addClass(el_settings, "node-settings");
-		this.element.appendChild(el_settings);
+	Node.prototype.notify = function() {
+		console.log('notify@Node:');
+		console.log(this);
+		
+		this.update();
+
+		for(var i = 0; i < this.dependents.length; i++) {
+			this.dependents[i].notify();
+		}
 	}
 
-	/*override in subclass*/
-	Node.prototype.createContent = function() {
-		console.log("'createContent' not overwritten");
+	Node.prototype.update = function() {
+		if(this.element) {
+			this.element.update();
+		}
+	};
+
+	Node.prototype.remove = function() {
+		if(confirm('Do you really want to remove this node?')){
+			console.log('remove@node_'+this.id)
+			for(var i = 0; i < this.parameters.length; i++) {
+				this.parameters[i].detachAll();
+			}
+			this.output.detachAll();
+			if(this.getUI()) {
+				this.getUI().remove();
+			}
+		}
 	}
 
-	Node.prototype.toggleSettings = function() {
-		toggleClass(this.element.querySelector(".node-settings"), "hidden");
+	Node.prototype.addDependent = function(dependent) {
+		this.dependents.push(dependent);
+	}
+
+	Node.prototype.removeDependent = function(dependent) {
+		for(var i = 0; i < this.dependents.length; i++) {
+			if(this.dependents[i] == dependent) {
+				this.dependents.splice(i, 1);
+			}
+		}
 	}
 
 	return Node;
 
 })();
 
-var Relation = (function() {
+
+var Constraint = (function() {
 	
-	Relation.prototype = Object.create(Node.prototype);
-	Relation.prototype.constructor = Relation;
+	Constraint.prototype = Object.create(Node.prototype);
+	Constraint.prototype.constructor = Constraint;
 
-	function Relation(id) {
-		//super
+	Constraint.prototype.relation1;
+	Constraint.prototype.attribute1;
+	Constraint.prototype.comparison;
+	Constraint.prototype.relation2;
+	Constraint.prototype.attribute2;
+
+	function Constraint(id) {
 		Node.call(this, id);
+
+		this.title = 'Constraint';
+
+		//Parameter 1
+		this.relation1 = new Relation(this, UILabel);
+		this.parameters.push(this.relation1);
+		this.attribute1 = new Attribute(this);
+		this.attribute1.setRelation(this.relation1);
+		this.parameters.push(this.attribute1);
+
+		//Comparison
+		this.comparison = new Comparison(this);
+		this.parameters.push(this.comparison);
+
+		//Parameter 2
+		this.relation2 = new Relation(this, UIConstant);
+		this.parameters.push(this.relation2);
+		this.attribute2 = new Attribute(this);
+		this.attribute2.setRelation(this.relation2);
+		this.parameters.push(this.attribute2);
 	}
 
-	Relation.prototype.init = function() {
-		this.title = "Relation";
+	Constraint.prototype.update = function() {
+		Node.prototype.update.call(this);
+
+		if(this.relation1.getValue() && this.relation2.getValue()) {
+			var rel = {
+				id: 'node-'+this.id,
+				title: this.relation1.getValue().title+'*'+this.relation2.getValue().title,
+				attributes: this.relation1.getValue().attributes.concat(this.relation2.getValue().attributes)
+			}
+
+			this.output.setValue(rel);
+		}
 	}
 
-	Relation.prototype.createContent = function() {
-		var el_content = document.createElement("div");
-		addClass(el_content, "node-content");
-
-		var input = new Input();
-		el_content.appendChild(input.element);
-
-		var input2 = new Input();
-		el_content.appendChild(input2.element);		
-
-		this.element.appendChild(el_content);
-
-	}
-
-	return Relation;
+	return Constraint;
 
 })();
 
-var Condition = (function() {
+
+var Table = (function() {
 	
-	Condition.prototype = Object.create(Node.prototype);
-	Condition.prototype.constructor = Condition;
+	Table.prototype = Object.create(Node.prototype);
+	Table.prototype.constructor = Table;
 
-	function Condition(id) {
-		//super
+	Table.prototype.relation;
+
+	function Table(id) {
 		Node.call(this, id);
+
+		this.title = 'Table';
+
+		this.relation = new Selection(this, 'Relation');
+		this.relation.setOptions(relations);
+		this.parameters.push(this.relation);
 	}
 
-	Condition.prototype.init = function() {
-		this.title = "Condition";
+	Table.prototype.update = function() {
+		Node.prototype.update.call(this);
+		
+		/*if(this.relation.getValue()){
+			var rel = this.relation.getValue();
+			rel.id = this.id;
+			for(var i = 0; i < rel.attributes.length; i++) {
+				rel.attributes[i].rel = this.id;
+			}
+
+			this.output.setValue(rel);
+		}*/
+
+		this.output.setValue(this.relation.getValue());
 	}
 
-	return Condition;
+	return Table;
 
 })();
 
 
-/*---TYPES--*/
+var Aggregation = (function() {
 
-var Input = (function() {
-	
-	function Input() {
-		this.element;
-		this.target;
-		this.type;
+	Aggregation.prototype = Object.create(Node.prototype);
+	Aggregation.prototype.constructor = Aggregation;
 
-		this.createElement();
+	Aggregation.prototype.relation;
+	Aggregation.prototype.attribute;
+	Aggregation.prototype.aggregate;
+
+	function Aggregation(id) {
+		Node.call(this, id);
+
+		this.title = 'Aggregation';
+
+		this.relation = new Relation(this, UILabel);
+		this.parameters.push(this.relation);
+
+		this.attribute = new Attribute(this);
+		this.attribute.setRelation(this.relation);
+		this.parameters.push(this.attribute);
+
+		this.aggregate = new Aggregate(this);
+		this.aggregate.setAttribute(this.attribute);
+		this.parameters.push(this.aggregate);
+
+		this.agg_default = new Selection(this, 'Default');
+		this.agg_default.setOptions(aggregates_default);
+		this.parameters.push(this.agg_default);
 	}
 
-	Input.prototype.createElement = function() {
-		this.element = document.createElement("div");
-		addClass(this.element, "input");
+	return Aggregation;
 
-		var el_target = document.createElement("div");
-		addClass(el_target, "endpoint");
-		this.element.appendChild(el_target);
+})();
 
-		instance.makeTarget(el_target, {
-			anchor: "Left",
-			endpoint:"Blank", 
-			paintStyle:{ fillStyle:"gray" },
-			maxConnections: 1,
-			beforeDrop: function(p) {console.log(p.sourceId); return true;}
-		});
 
-		var el_select = document.createElement("select");
-		el_select.add(new Option("test1", "value1", false, false));
-		el_select.add(new Option("test2", "value2", true, true));
-		el_select.add(new Option("test3", "value3", false, undefined));
+var Output = (function() {
 
-		var el_constant = document.createElement("input");
+	Output.prototype = Object.create(Node.prototype);
+	Output.prototype.constructor = Output;
 
-		this.element.appendChild(el_select);
-		this.element.appendChild(el_constant);
+	Output.prototype.relation;
+
+	function Output(id) {
+		Node.call(this, id);
+
+		this.title = 'Output';
+
+		this.relation = new Relation(this, UILabel);
+		this.parameters.push(this.relation);
 	}
 
-	return Input;
+	return Output;
 
 })();

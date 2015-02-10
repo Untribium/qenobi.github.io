@@ -15,36 +15,37 @@ body {
 	background-color: hsla(80, 60%, 40%, 1);
 }
 
-.logo p {
+.logo {
 	float: left;
+}
+
+.logo p {
 	padding: 0;
 	margin: 0;
 	font-family: "Khand", sans-serif;
 	font-weight: 600;
 	font-size: 34px;
 	color: #FFF;
-	padding: 15px 40px 15px 8px;
-	line-height: 20px;
+	padding: 0px 16px 0px 8px;
+	line-height: 50px;
 }
 
 .no-select {
 	-moz-user-select: none;
 	-webkit-user-select: none;
 	-ms-user-select:none;
-	user-select:none;
 	-o-user-select:none;
+	user-select:none;
 	cursor: default;
 }
 
 .menubar ul {
-	/*float: left;*/
 	list-style: none;
 	margin: 0;
 	padding: 0;
 }
 
 .menubar li {
-	/*float: left;*/
 	display: inline-block;
 }
 
@@ -55,7 +56,7 @@ body {
 	margin: 0;
 	padding: 15px;
 	line-height: 20px;
-	color: rgba(255, 255, 255, 0.85);
+	color: rgba(255, 255, 255, 0.75);
 	cursor: pointer;
 	transition: color 0.1s ease-in-out;
 }
@@ -65,7 +66,7 @@ body {
 }
 
 /* main container */
-.slate {
+.container {
 	position: absolute;
 	width: 100%;
 	top: 50px;
@@ -75,25 +76,22 @@ body {
 }
 
 .node {
-	/*position*/
 	position: absolute;
-	width: 100px;
+	width: 125px;
 	left: 50px;
 	top: 50px;
 
-	/*color*/
 	background-color: white;
 
-	/*border*/
 	border: solid 1px rgba(0, 0, 0, 0.5);
-	box-shadow: 0 0 5px rgba(0, 0, 0, 0.25);
+	box-shadow: 0 0 5px 1px rgba(0, 0, 0, 0.25);
 
-	/*opacity*/
 	filter: alpha(opacity=85);
 	opacity: 0.85;
 
 	/*transistion*/
 	transition: box-shadow 0.1s ease-in, opacity 0.1s ease-in-out;
+
 }
 
 .node:hover {
@@ -105,82 +103,139 @@ body {
 	opacity: 1.0;
 }
 
-.endpoint {
-	width: 10px;
+.header {
 	height: 20px;
-	background-color: hsla(80, 60%, 40%, 1);
-}
-
-.node-header {
-	height: 10px;
-	padding: 5px;
 	background-color: hsla(80, 60%, 40%, 0.5);
 	background-origin: border-box;
 	border-bottom: solid 1px rgba(0, 0, 0, 0.5);
 }
 
-.node-header p {
+.header p {
+	margin: 0px 0px 0px 5px;
 	float: left;
-	display: inline-block;
-	line-height: 10px;
-	margin: 0;
+	line-height: 20px;
 	font-family: "Open Sans", sans-serif;
 	font-weight: 400;
 	font-size: 13px;
 }
 
-.node-header .fa {
+.header .fa {
 	float: right;
-	line-height: 10px;
+	line-height: 20px;
 	color: rgba(0, 0, 0, 0.75);
 }
 
-.node-header .endpoint {
-	float: right;
-	margin: -5px -5px -5px 5px;
+.content {}
+
+.parameter {
+	margin: 5px 0px;
+	font-family: Arial;
+	font-size: 13px;
 }
 
-.node-content {
-
+.parameter span {
+	display: block;
+	overflow: hidden;
+	height: 20px;
 }
 
-.node-settings {
-	height: 0px;
-	background-color: rgba(0, 0, 0, 0.05);
-	box-shadow: inset 0  5px 5px -5px rgba(0, 0, 0, 0.5), inset 0 -5px 5px -5px rgba(0, 0, 0, 0.5);
+/*ui element (select, input)*/
+.parameter .uiel {
+	width: 100%;
+	height:	20px;
+	line-height: 20px;
 
-    transition: height 0.25s cubic-bezier(0.5, 0.1, 0.45, 1.0);
+	background-color: #FFF;
+
+	border: 1px solid #A9A9A9;
+	border-right: 0px;
+	border-left: 0px;
+
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
-.node-settings.hidden {
-	height: 80px;
-	border-bottom: solid 1px rgba(0, 0, 0, 0.5);
-
+p.uiel {
+	border: 0px !important;
+	margin: 0px;
 }
 
-.input {
-	padding-top: 5px;
+.parameter input.uiel {
+	text-indent: 4px;
 }
 
-.input select {
-	width: 85px;
-	margin: 0 0 5px 5px;
-	display: inline-block;
-	float: left;
+.parameter.connected .uiel {
 	display: none;
 }
 
-.input input {
-	width: 84px;
-	margin: 0 0 5px 5px;
-	display: inline-block;
-	float: left;
-	line-height: 14px;
-	border: 1px solid #A9A9A9;
-	border-right: 0px;
+.parameter .title {
+	width: 100%;
+	height: 20px;
+	line-height: 20px;
+
+	background-color: #FFF;
+
+	margin: 0px;
+
+	display: none;
 }
 
-.input .endpoint {
-	display: inline-block;
+.parameter.connected .title {
+	display: block;
+}
+
+/*parameter has input (left)*/
+.input {}
+
+/*parameter has output (right)*/
+.output {}
+
+.input .uiel {
+	border-left: 1px solid #A9A9A9;
+}
+
+.output .uiel {
+	border-right: 1px solid #A9A9A9;
+}
+
+.parameter .endpoint {
 	float: left;
+}
+
+.source {
+	width: 10px;
+	height: 20px;
+	background-color: hsla(80, 60%, 40%, 1);
+	float: right;
+	margin-left: 5px;
+}
+
+.target {
+	width: 10px;
+	height: 20px;
+	background-color: hsla(80, 60%, 40%, 1);
+	float: left;
+	margin-right: 5px;
+}
+
+.active {
+	background-color: red;
+}
+
+.square svg * {
+	fill: red;
+}
+
+.square {
+	margin-left: 5px;
+}
+
+
+
+
+
+.hidden {
+	display: none;
 }

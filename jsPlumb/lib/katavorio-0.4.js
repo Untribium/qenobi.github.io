@@ -188,11 +188,13 @@
             dragEl = this.el,
             clone = this.params.clone;
         this.toGrid = function(pos) {
-            return this.params.grid == null ? pos :
+            /*return this.params.grid == null ? pos :
                 [
                         this.params.grid[0] * Math.floor(pos[0] / this.params.grid[0]),
                         this.params.grid[1] * Math.floor(pos[1] / this.params.grid[1])
-                ];
+                ];*/
+
+            return this.params.grid != null && shift ? [this.params.grid[0] * Math.floor(pos[0] / this.params.grid[0]),this.params.grid[1] * Math.floor(pos[1] / this.params.grid[1])] : pos;
         };
 
         this.constrain = typeof this.params.constrain === "function" ? this.params.constrain  : (this.params.constrain || this.params.containment) ? function(pos) {
