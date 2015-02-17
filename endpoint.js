@@ -12,6 +12,8 @@ var Endpoint = (function() {
 
 	Endpoint.prototype.type;
 
+	Endpoint.prototype.query;
+
 	function Endpoint(parent) {
 		this.parent = parent;
 
@@ -30,26 +32,19 @@ var Endpoint = (function() {
 	}
 
 	Endpoint.prototype.attach = function(endpoint) {
-		console.log('attach@'+this.type+':');
-		console.log(this);
+		console.log('attach@'+this.type+':\t\t', this);
+
 		this.neighbors.push(endpoint);
-		//subclass should call notify
 	}
 
 	Endpoint.prototype.detach = function(endpoint) {
-		console.log('detach@'+this.type+':');
-		console.log(this);
-		for(var i = 0; i < this.neighbors.length; i++) {
-			if(this.neighbors[i] == endpoint) {
-				this.neighbors.splice(i, 1);
-			}
-		}
-		//subclass should call notify
+		console.log('detach@'+this.type+':\t\t', this);
+
+		this.neighbors.remove(endpoint);
 	}
 
 	Endpoint.prototype.notify = function() {
-		console.log('notify@Endpoint:');
-		console.log(this);
+		console.log('notify@Endpoint:\t', this);
 
 		this.update();
 
@@ -74,6 +69,15 @@ var Endpoint = (function() {
 		}
 	}
 
+	Endpoint.prototype.getQuery = function() {
+		return this.query;
+	}
+
+	Endpoint.prototype.setQuery = function(query) {
+		this.query = query;
+		this.notify();
+	}
+
 	Endpoint.prototype.getValue = function() {
 		return this.value;
 	}
@@ -88,15 +92,13 @@ var Endpoint = (function() {
 	}
 
 	Endpoint.prototype.detachAll = function() {
-		//this is ugly
+		for(var i = 0; i < this.neighbors.length; i++) {
+			this.neighbors[i].detach(this);
+			this.detach(this.neighbors[i]);
+		}
+
 		if(this.element) {
 			this.element.detachAll();
-		}
-		else {
-			for(var i = 0; i < this.neighbors.length; i++) {
-				this.neighbors[i].detach(this);
-				this.detach(this.neighbors[i]);
-			}
 		}
 	}
 
@@ -116,14 +118,16 @@ var Source = (function() {
 		this.type = 'source';
 	}
 
-	Source.prototype.attach = function(endpoint) {
-		Endpoint.prototype.attach.call(this, endpoint);
-		this.notify();
-	}
+	Source.prototype.update = function() {
+		Endpoint.prototype.update.call(this);
 
-	Source.prototype.detach = function(endpoint) {
-		Endpoint.prototype.detach.call(this, endpoint);
-		this.notify();
+		this.value = this.parent.getValue();
+		if(this.parent.query) {
+			this.query = this.parent.getQuery();
+		}
+		else {
+			this.query = undefined;
+		}
 	}
 
 	return Source;
@@ -148,16 +152,16 @@ var Target = (function() {
 		this.notify();
 	}
 
-	Target.prototype.detach = function(endpoint) {		
+	Target.prototype.detach = function(endpoint) {
 		Endpoint.prototype.detach.call(this, endpoint);
 		endpoint.removeDependent(this);
-		this.value = null;
 		this.notify();
 	}
 
 	Target.prototype.update = function() {
 		Endpoint.prototype.update.call(this);
 		this.value = this.connected ? this.neighbors[0].value : null;
+		this.query = this.connected ? this.neighbors[0].query : null;
 	}
 
 	return Target;

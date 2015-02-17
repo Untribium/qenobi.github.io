@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html>
 	<head>
 
@@ -52,7 +52,8 @@
                 <!-- /JS -->
 
                 <script src="util.js"></script>
-                <script src="data.js"></script>
+                <script src="query.js"></script>
+                <script src="config.js"></script>
                 <script src="UI.js"></script>
                 <script src="node.js"></script>
                 <script src="parameter.js"></script>
@@ -66,13 +67,13 @@
 			<div class="logo"><p>QENoBI</p></div>
                         <div class="menubar">
                                 <ul>
-                                        <li onclick="addNode(new Table(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Table</p></li>
-                                        <li onclick="addNode(new Constraint(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Constraint</p></li>
-                                        <li onclick="addNode(new Output(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Output</p></li>
-                                        <li onclick="addNode(new Aggregation(node_counter))"><p><i class="fa fa-plus-square"></i>&nbsp;Aggregation</p></li>
+                                        <li onclick="addNode(Table)"><p><i class="fa fa-plus-square"></i>&nbsp;Table</p></li>
+                                        <li onclick="addNode(Constraint)"><p><i class="fa fa-plus-square"></i>&nbsp;Constraint</p></li>
+                                        <li onclick="addNode(Aggregation)"><p><i class="fa fa-plus-square"></i>&nbsp;Select</p></li>
+                                        <li onclick="addNode(Rename)"><p><i class="fa fa-plus-square"></i>&nbsp;Rename</p></li>
+                                        <li onclick="addNode(Merge)"><p><i class="fa fa-plus-square"></i>&nbsp;Merge</p></li>
                                 </ul>
                         </div>
 		</div>
-		<div class="container" id="container"></div>
 	</body>
 </html>

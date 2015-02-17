@@ -75,11 +75,17 @@ body {
 	overflow: auto;
 }
 
+.container pre {
+	margin: 20px;
+}
+
 .node {
 	position: absolute;
 	width: 125px;
-	left: 50px;
-	top: 50px;
+
+	/*center*/
+	left: 200px;
+	top: 300px;
 
 	background-color: white;
 
@@ -225,7 +231,7 @@ p.uiel {
 }
 
 .square svg * {
-	fill: red;
+	fill: transparent;
 }
 
 .square {

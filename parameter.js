@@ -2,24 +2,35 @@
 
 var Parameter = (function() {
 
+	Parameter.prototype.id;
 	Parameter.prototype.element;
 
+	Parameter.prototype.scope;
 	Parameter.prototype.value;
+	Parameter.prototype.query;
+
+	Parameter.prototype.uitype;
+	Parameter.prototype.required;
 
 	Parameter.prototype.parent;
 	Parameter.prototype.title;
-	Parameter.prototype.trace;
 
+	Parameter.prototype.dependencies;
 	Parameter.prototype.dependents;
+
+	Parameter.prototype.satisfied;
 
 	Parameter.prototype.input;
 	Parameter.prototype.output;
-	// Parameter.prototype.uitype;
 
-	function Parameter(parent, title) {
+	function Parameter(parent, title, uitype, required) {
 		this.parent = parent;
 		this.title = title;
 
+		this.uitype = uitype;
+		this.required = required;
+
+		this.dependencies = [];
 		this.dependents = [];
 		this.trace = [];
 
@@ -29,7 +40,7 @@ var Parameter = (function() {
 	}
 
 	Parameter.prototype.buildUI = function() {
-		/*this.element = new this.uitype(this, this.title);
+		this.element = new this.uitype(this, this.title);
 
 		if(this.input) {
 			this.element.setInput(this.input.buildUI());
@@ -38,11 +49,9 @@ var Parameter = (function() {
 			this.element.setOutput(this.output.buildUI());
 		}
 
-		// handle options
-
 		this.notify();
 
-		return this.element;*/
+		return this.element;
 	}
 
 	Parameter.prototype.getUI = function() {
@@ -53,9 +62,29 @@ var Parameter = (function() {
 		return this.value;
 	}
 
+	Parameter.prototype.getQuery = function() {
+		return this.query;
+	}
+
+	Parameter.prototype.setScope = function(scope) {
+		this.scope = scope;
+	}
+
+	Parameter.prototype.setID = function(id) {
+		this.id = id;
+	}
+
+	Parameter.prototype.isConnected = function() {
+		if(this.input) {
+			return this.input.isConnected();
+		}
+		else {
+			return false;
+		}
+	}
+
 	Parameter.prototype.notify = function() {
-		console.log('notify@Parameter:');
-		console.log(this);
+		console.log('notify@Parameter:\t', this);
 
 		this.update();
 
@@ -65,16 +94,42 @@ var Parameter = (function() {
 	}
 
 	Parameter.prototype.update = function() {
-		if(this.input && this.input.isConnected()) {
+		this.checkDependencies();
+
+		if(this.isConnected()) {
 			this.value = this.input.getValue();
+			this.query = this.input.getQuery();
+			//this.query.resetMarkers();
 		}
-		else if(this.element) {
+		else if(this.element && this.element.getValue()) {
 			this.value = this.element.getValue();
+			this.query = this.element.getValue();
+		}
+		else {
+			this.value = undefined;
+			this.query = undefined;
 		}
 
 		if(this.input && this.element) {
-			this.element.setConnected(this.input.isConnected());
+			this.element.setConnected(this.isConnected());
 		}
+
+		//scope
+
+	}
+
+	Parameter.prototype.checkDependencies = function() {
+		var satisfied = true;
+
+		for(var i = 0; i < this.dependencies.length; i++) {
+			satisfied = this.satisfied && Boolean(this.dependencies[i].getValue());
+		}
+
+		/*if(this.element) {
+			this.element.setVisible(satisfied);
+		}*/
+
+		return satisfied;
 	}
 
 	Parameter.prototype.detachAll = function() {
@@ -82,12 +137,38 @@ var Parameter = (function() {
 			this.input.detachAll();
 		}
 		if(this.output){
-			this.output.detachAll()
+			this.output.detachAll();
 		}
 	}
 
-	Parameter.prototype.addDependent = function(parameter) {
-		this.dependents.push(parameter);
+	//two way, only for parameters
+	Parameter.prototype.addDependency = function(dependency) {
+		this.dependencies.push(dependency);
+		dependency.addDependent(this);
+	}
+
+	//two way, only for parameters
+	Parameter.prototype.removeDependency = function(dependency) {
+		for(var i = 0; i < this.dependencies.length; i++) {
+			if(this.dependencies[i] == dependency) {
+				this.dependencies.splice(i, 1);
+				dependency.removeDependent(this);
+			}
+		}
+	}
+
+	//only one way!
+	Parameter.prototype.addDependent = function(dependent) {
+		this.dependents.push(dependent);
+	}
+
+	//only one way!
+	Parameter.prototype.removeDependent = function(dependent) {
+		for(var i = 0; i < this.dependents.length; i++) {
+			if(this.dependents[i] == dependent) {
+				this.dependents.splice(i, 1);
+			}
+		}
 	}
 
 	return Parameter;
@@ -95,55 +176,41 @@ var Parameter = (function() {
 })();
 
 
-var Relation = (function() {
+var PRelation = (function() {
 
-	Relation.prototype = Object.create(Parameter.prototype);
-	Relation.prototype.constructor = Relation;
+	PRelation.prototype = Object.create(Parameter.prototype);
+	PRelation.prototype.constructor = PRelation;
 
-	//show input
-	Relation.prototype.uitype;
-
-	function Relation(parent, uitype) {
-		Parameter.call(this, parent, 'Relation');
+	function PRelation(parent, uitype) {
+		Parameter.call(this, parent, 'Relation', uitype, true);
 
 		this.uitype = uitype;
-		this.attributes = [];
 
 		this.input = new Target(this);
 	}
 
-	Relation.prototype.buildUI = function() {
-		this.element = new this.uitype(this, this.title);
-
-		this.element.setInput(this.input.buildUI());
-
-		this.notify();
-
-		return this.element;
-	}
-
-	return Relation;
+	return PRelation;
 
 })();
 
 
-var Selection = (function() {
+var PSelection = (function() {
 
-	Selection.prototype = Object.create(Parameter.prototype);
-	Selection.prototype.constructor = Selection;
+	PSelection.prototype = Object.create(Parameter.prototype);
+	PSelection.prototype.constructor = PSelection;
 
-	Selection.prototype.options;
+	PSelection.prototype.options;
 
-	function Selection(parent, title) {
-		Parameter.call(this, parent, title);
+	function PSelection(parent, title, required) {
+		Parameter.call(this, parent, title, UISelection, required);
 
 		this.options = [];
 
 		this.input = new Target(this);
 	}
 
-	Selection.prototype.buildUI = function() {
-		this.element = new UISelection(this, this.title);
+	PSelection.prototype.buildUI = function() {
+		this.element = new UISelection(this, this.title, this.required);
 		this.element.setInput(this.input.buildUI());
 
 		this.element.setOptions(this.options);
@@ -153,130 +220,179 @@ var Selection = (function() {
 		return this.element;
 	}
 
-	Selection.prototype.getOptions = function() {
+	PSelection.prototype.getOptions = function() {
 		return this.options;
 	}
 
-	Selection.prototype.setOptions = function(options) {
+	PSelection.prototype.setOptions = function(options) {
 		this.options = options;
 		if(this.element) {
 			this.element.setOptions(this.options);
 		}
-		this.value = this.options[0];
 	}
 
-	Selection.prototype.clearOptions = function() {
+	PSelection.prototype.addOption = function(option) {
+		this.options.push(option);
+		if(this.element) {
+			this.element.addOption(option);
+		}
+	}
+
+	PSelection.prototype.clearOptions = function() {
 		this.setOptions([]);
 	}
 
-	return Selection;
-
-})();
-
-
-var Attribute = (function() {
-
-	Attribute.prototype = Object.create(Selection.prototype);
-	Attribute.prototype.constructor = Attribute;
-
-	Attribute.prototype.relation;
-
-	function Attribute(parent) {
-		Selection.call(this, parent, 'Attribute');
-	}
-
-	Attribute.prototype.setRelation = function(relation) {
-		this.relation = relation;
-		this.relation.addDependent(this);
-		this.notify();
-	}
-
-	Attribute.prototype.update = function() {
-		console.log('update@Attribute');
-		console.log(this.relation);
-		if(this.relation && this.relation.getValue()) {
-			this.setOptions(this.relation.getValue().attributes);
-			if(this.element) {
-				this.element.setVisible(true);
-			}
-		}
-		else if(this.element) {
-			this.clearOptions();
-			this.element.setVisible(false);
+	PSelection.prototype.update = function() {
+		if(this.element) {
+			this.element.setOptions(this.options);
 		}
 
 		Parameter.prototype.update.call(this);
 	}
 
-	return Attribute;
+	return PSelection;
 
 })();
 
 
-var Aggregate = (function() {
+var PAttribute = (function() {
 
-	Aggregate.prototype = Object.create(Selection.prototype);
-	Aggregate.prototype.constructor = Aggregate;
+	PAttribute.prototype = Object.create(PSelection.prototype);
+	PAttribute.prototype.constructor = PAttribute;
 
-	Aggregate.prototype.attribute;
+	PAttribute.prototype.relation;
 
-	function Aggregate(parent) {
-		Selection.call(this, parent, 'Aggregate');
-		this.setOptions(aggregates);
+	function PAttribute(parent, required) {
+		PSelection.call(this, parent, 'Attribute', required);
 	}
 
-	Aggregate.prototype.setAttribute = function(attribute) {
-		this.attribute = attribute;
-		this.attribute.addDependent(this);
-		this.notify();
+	PAttribute.prototype.setRelation = function(relation) {
+		this.relation = relation;
+		this.addDependency(this.relation);
 	}
 
-	Aggregate.prototype.update = function() {
-		if(this.element) {
-			this.element.setVisible(this.attribute.getValue());
+	PAttribute.prototype.getRelation = function() {
+		return this.relation;
+	}
+
+	PAttribute.prototype.update = function() {
+		if(this.relation && this.relation.getQuery()) {
+			this.setOptions(this.relation.getQuery().getAttributes());
+		}
+		else {
+			this.clearOptions();
+		}
+
+		//Parameter.prototype.update.call(this);
+
+		if(this.element && this.element.getValue()) {
+			this.value = this.element.getValue().getMarker().getAttribute();
 		}
 	}
 
-	return Aggregate;
+	return PAttribute;
 
 })();
 
 
-var Comparison = (function() {
+var PAggregate = (function() {
 
-	Comparison.prototype = Object.create(Selection.prototype);
-	Comparison.prototype.constructor = Comparison;
+	PAggregate.prototype = Object.create(PSelection.prototype);
+	PAggregate.prototype.constructor = PAggregate;
 
-	function Comparison(parent) {
-		Selection.call(this, parent, 'Comparison');
-		this.setOptions(operators);
+	PAggregate.prototype.attribute;
+
+	function PAggregate(parent) {
+		PSelection.call(this, parent, 'Aggregate', true);
+		this.setOptions(Config.aggregateTypes);
 	}
 
-	return Comparison;
+	PAggregate.prototype.setAttribute = function(attribute) {
+		this.attribute = attribute;
+		this.addDependency(this.attribute);
+	}
+
+	PAggregate.prototype.getAttribute = function() {
+		return this.attribute;
+	}
+
+	return PAggregate;
 
 })();
 
 
-var Label = (function() {
+var PComparison = (function() {
 
-	Label.prototype = Object.create(Parameter.prototype);
-	Label.prototype.constructor = Label;
+	PComparison.prototype = Object.create(PSelection.prototype);
+	PComparison.prototype.constructor = PComparison;
 
-	function Label(parent, title) {
-		Parameter.call(this, parent, title);
-
-		this.input = new Target();
+	function PComparison(parent) {
+		PSelection.call(this, parent, 'Comparison', true);
+		this.setOptions(Config.comparisonTypes);
 	}
 
-	Label.prototype.buildUI = function() {
-		this.element = new UILabel(this);
-		this.element.setInput(this.input.buildUI());
+	return PComparison;
 
-		this.notify();
+})();
 
-		return this.element;
+
+var PTable = (function() {
+
+	PTable.prototype = Object.create(PSelection.prototype);
+	PTable.prototype.constructor = PTable;
+
+	function PTable(parent) {
+		PSelection.call(this, parent, 'Relation', true);
+
+		this.setOptions(Config.schema);
 	}
 
-	return Label;
+	return PTable;
+
+})();
+
+
+var PJoin = (function() {
+
+	PJoin.prototype = Object.create(PSelection.prototype);
+	PJoin.prototype.constructor = PJoin;
+
+	function PJoin(parent) {
+		PSelection.call(this, parent, 'Type', true);
+		this.setOptions(Config.joinTypes);
+	}
+
+	return PJoin;
+
+})();
+
+
+var PMerge = (function() {
+
+	PMerge.prototype = Object.create(PSelection.prototype);
+	PMerge.prototype.constructor = PMerge;
+
+	function PMerge(parent) {
+		PSelection.call(this, parent, 'Type', true);
+		this.setOptions(Config.mergeTypes);
+	}
+
+	return PMerge;
+
+})();
+
+
+var PConstant = (function() {
+
+	PConstant.prototype = Object.create(Parameter.prototype);
+	PConstant.prototype.constructor = PConstant;
+
+	function PConstant(parent) {
+		Parameter.call(this, parent, 'Constant', UIConstant, true);
+
+		this.input = new Target(this);
+	}
+
+	return PConstant;
 
 })();

@@ -5,6 +5,7 @@ var Node = (function() {
 	Node.prototype.id;
 	Node.prototype.element;
 	Node.prototype.title;
+	Node.prototype.removable;
 
 	Node.prototype.output;
 	Node.prototype.parameters;
@@ -12,24 +13,25 @@ var Node = (function() {
 	Node.prototype.dependents;
 
 	Node.prototype.trace;
-	Node.prototype.schema;
 	Node.prototype.query;
+	Node.prototype.value;
 
-	function Node(id) {
+	function Node(id, removable) {
 		this.id = id;
+		this.removable = removable == undefined ? true : removable;
 
 		this.dependents = [];
 		this.parameters = [];
-
-		this.output = new Source(this);
 	}
 
 	Node.prototype.buildUI = function() {
-		this.element = new UINode(this, this.title);
-		this.element.setOutput(this.output.buildUI());
+		this.element = new UINode(this, this.title, this.removable);
+		if(this.output) {
+			this.element.setOutput(this.output.buildUI());
+		}
 
 		for(var i = 0; i < this.parameters.length; i++) {
-			this.element.append(this.parameters[i].buildUI());
+			this.element.addParameter(this.parameters[i].buildUI());
 		}
 
 		this.notify();
@@ -41,17 +43,20 @@ var Node = (function() {
 		return this.element;
 	}
 
+	Node.prototype.getID = function() {
+		return this.id;
+	}
+
+	Node.prototype.getValue = function() {
+		return this.value;
+	}
+
 	Node.prototype.getQuery = function() {
 		return this.query;
 	}
 
-	Node.prototype.getSchema = function() {
-		return this.schema;
-	}
-
 	Node.prototype.notify = function() {
-		console.log('notify@Node:');
-		console.log(this);
+		console.log('notify@Node:\t\t', this);
 		
 		this.update();
 
@@ -67,14 +72,52 @@ var Node = (function() {
 	};
 
 	Node.prototype.remove = function() {
-		if(confirm('Do you really want to remove this node?')){
-			console.log('remove@node_'+this.id)
+		if(this.removable && confirm('Do you really want to remove this node?')){
+			console.log('remove@Node:\t\t', this);
+
 			for(var i = 0; i < this.parameters.length; i++) {
 				this.parameters[i].detachAll();
 			}
-			this.output.detachAll();
-			if(this.getUI()) {
-				this.getUI().remove();
+
+			if(this.output) {
+				this.output.detachAll();
+			}
+
+			if(this.element) {
+				this.element.remove();
+			}
+		}
+	}
+
+	//add Parameter at index (optional)
+	Node.prototype.addParameter = function(parameter, index) {
+		this.parameters.splice(index || this.parameters.length, 0, parameter);
+
+		for(var i = 0; i < this.parameters.length; i++) {
+			this.parameters[i].setID(i);
+		}
+
+		if(this.element) {
+			this.element.addParameter(parameter.buildUI(), index);
+		}
+	}
+
+	Node.prototype.removeParameter = function(parameter) {
+		for(var i = this.parameters.length-1; i >= 0; i--) {
+			if(this.parameters[i] == parameter) {
+
+				this.parameters.splice(i, 1);
+				parameter.detachAll();
+
+				if(this.element) {
+					this.element.removeParameter(parameter.element);
+				}
+
+				for(var j = 0; j < parameter.dependents.length; j++) {
+					if(parameter.dependents[j] instanceof Parameter) {
+						this.removeParameter(parameter.dependents[j]);
+					}
+				}
 			}
 		}
 	}
@@ -84,14 +127,45 @@ var Node = (function() {
 	}
 
 	Node.prototype.removeDependent = function(dependent) {
-		for(var i = 0; i < this.dependents.length; i++) {
-			if(this.dependents[i] == dependent) {
-				this.dependents.splice(i, 1);
-			}
-		}
+		this.dependents.remove(dependent);
 	}
 
 	return Node;
+
+})();
+
+
+var Table = (function() {
+	
+	Table.prototype = Object.create(Node.prototype);
+	Table.prototype.constructor = Table;
+
+	Table.prototype.relation;
+
+	function Table(id) {
+		Node.call(this, id, true);
+
+		this.title = 'Table';
+
+		this.output = new Source(this);
+
+		this.query = new Query();
+
+		this.relation = new PTable(this);
+		this.addParameter(this.relation);
+	}
+
+	Table.prototype.update = function() {
+		Node.prototype.update.call(this);
+
+		var rel = this.relation.getValue().clone();
+		rel.setAlias('t'+this.id);
+
+		this.query = new Query(rel, null);
+		this.query.setCardinality('t'+this.id);
+	}
+
+	return Table;
 
 })();
 
@@ -106,84 +180,94 @@ var Constraint = (function() {
 	Constraint.prototype.comparison;
 	Constraint.prototype.relation2;
 	Constraint.prototype.attribute2;
+	Constraint.prototype.join;
 
 	function Constraint(id) {
-		Node.call(this, id);
+		Node.call(this, id, true);
 
 		this.title = 'Constraint';
 
+		this.output = new Source(this);
+
 		//Parameter 1
-		this.relation1 = new Relation(this, UILabel);
-		this.parameters.push(this.relation1);
-		this.attribute1 = new Attribute(this);
+		this.relation1 = new PRelation(this, UILabel);
+		this.addParameter(this.relation1);
+
+		this.attribute1 = new PAttribute(this, true);
 		this.attribute1.setRelation(this.relation1);
-		this.parameters.push(this.attribute1);
+		this.addParameter(this.attribute1);
 
 		//Comparison
-		this.comparison = new Comparison(this);
-		this.parameters.push(this.comparison);
+		this.comparison = new PComparison(this);
+		this.addParameter(this.comparison);
 
 		//Parameter 2
-		this.relation2 = new Relation(this, UIConstant);
-		this.parameters.push(this.relation2);
-		this.attribute2 = new Attribute(this);
+		this.relation2 = new PRelation(this, UIRelation);
+		this.addParameter(this.relation2);
+
+		this.attribute2 = new PAttribute(this, true);
 		this.attribute2.setRelation(this.relation2);
-		this.parameters.push(this.attribute2);
+		this.addParameter(this.attribute2);
+
+		//Join
+		this.join = new PJoin(this);
+		this.join.addDependency(this.relation1);
+		this.join.addDependency(this.relation2);
+		this.addParameter(this.join);
 	}
 
 	Constraint.prototype.update = function() {
 		Node.prototype.update.call(this);
 
-		if(this.relation1.getValue() && this.relation2.getValue()) {
-			var rel = {
-				id: 'node-'+this.id,
-				title: this.relation1.getValue().title+'*'+this.relation2.getValue().title,
-				attributes: this.relation1.getValue().attributes.concat(this.relation2.getValue().attributes)
+		if(this.relation1.getQuery() && this.relation2.getQuery()) {
+
+			this.query = new Query();
+
+			var q1 = this.relation1.getQuery();
+			var q2 = this.relation2.getQuery();
+
+			var a1 = this.attribute1.getValue();
+			var a2 = this.attribute2.getValue();
+
+			var cop = this.comparison.getValue();
+			var jop = this.join.getValue();
+
+			var c = new Comparison(a1, a2, cop);
+
+			var r, w;
+			
+			if(q1 != q2 && q2.getCardinality() != 1) {
+				r = new Join(q1.getRelation().clone(), q2.getRelation().clone(), jop, c);
+
+				if(q1.getCondition() && q2.getCondition()) {
+					w = new Connective(q1.getCondition(), q2.getCondition(), Config.connectiveTypes[0]);
+				}
+				else {
+					w = q1.getCondition() || q2.getCondition();
+				}
+			}
+			else {
+				r = q1.getRelation().clone();
+
+				if(q1.getCondition()) {
+					w = new Connective(q1.getCondition(), c, Config.connectiveTypes[0]);
+				}
+				else {
+					w = c;
+				}
 			}
 
-			this.output.setValue(rel);
+			this.query.setRelation(r);
+			this.query.setCondition(w);
+
+			this.query.setCardinality('t'+this.id);
+		}
+		else {
+			this.query = null;
 		}
 	}
 
 	return Constraint;
-
-})();
-
-
-var Table = (function() {
-	
-	Table.prototype = Object.create(Node.prototype);
-	Table.prototype.constructor = Table;
-
-	Table.prototype.relation;
-
-	function Table(id) {
-		Node.call(this, id);
-
-		this.title = 'Table';
-
-		this.relation = new Selection(this, 'Relation');
-		this.relation.setOptions(relations);
-		this.parameters.push(this.relation);
-	}
-
-	Table.prototype.update = function() {
-		Node.prototype.update.call(this);
-		
-		/*if(this.relation.getValue()){
-			var rel = this.relation.getValue();
-			rel.id = this.id;
-			for(var i = 0; i < rel.attributes.length; i++) {
-				rel.attributes[i].rel = this.id;
-			}
-
-			this.output.setValue(rel);
-		}*/
-
-		this.output.setValue(this.relation.getValue());
-	}
-
-	return Table;
 
 })();
 
@@ -194,31 +278,188 @@ var Aggregation = (function() {
 	Aggregation.prototype.constructor = Aggregation;
 
 	Aggregation.prototype.relation;
-	Aggregation.prototype.attribute;
-	Aggregation.prototype.aggregate;
+	Aggregation.prototype.aggregates;
 
 	function Aggregation(id) {
-		Node.call(this, id);
+		Node.call(this, id, true);
 
-		this.title = 'Aggregation';
+		this.title = 'Select';
 
-		this.relation = new Relation(this, UILabel);
-		this.parameters.push(this.relation);
+		this.output = new Source(this);
 
-		this.attribute = new Attribute(this);
-		this.attribute.setRelation(this.relation);
-		this.parameters.push(this.attribute);
+		this.aggregates = [];
 
-		this.aggregate = new Aggregate(this);
-		this.aggregate.setAttribute(this.attribute);
-		this.parameters.push(this.aggregate);
+		this.relation = new PRelation(this, UILabel);
+		this.addParameter(this.relation);
+	}
 
-		this.agg_default = new Selection(this, 'Default');
-		this.agg_default.setOptions(aggregates_default);
-		this.parameters.push(this.agg_default);
+	Aggregation.prototype.addAttribute = function() {
+		var attribute = new PAttribute(this, false);
+		attribute.setRelation(this.relation);
+		var aggregate = new PAggregate(this);
+		aggregate.setAttribute(attribute);
+
+		this.aggregates.push(aggregate);
+
+		this.addParameter(attribute);
+		this.addParameter(aggregate);
+	}
+
+	Aggregation.prototype.update = function() {
+		Node.prototype.update.call(this);
+
+		if(this.relation.getQuery()) {
+			for(var i = this.aggregates.length-2; i >= 0; i--) {
+
+				if(!this.aggregates[i].getAttribute().getValue()) {
+					this.removeParameter(this.aggregates.splice(i, 1)[0].getAttribute());
+				}
+			}
+
+			//if list empty or last element set, add new attribute
+			if(!this.aggregates.length || this.aggregates.peek().getAttribute().getValue()) {
+				this.addAttribute();
+			}
+
+			var query = this.relation.getQuery().clone();
+
+			for(var i = 0; i < this.aggregates.length; i++) {
+				var attribute = this.aggregates[i].getAttribute().getValue();
+				var type = this.aggregates[i].getValue();
+				if(attribute) {
+					if(type.getValue() != 'GROUP') {
+						query.projection.push(new Aggregate(attribute, type, 'a'+i));
+					}
+					else {
+						query.projection.push(attribute);
+						query.groupBy.push(attribute);
+					}
+				}
+			}
+
+			this.query = new Query(new Subquery(query, 't'+this.id));
+
+		}
+		//remove all aggregates if no relation connected
+		else {
+			while(this.aggregates.length) {
+				this.removeParameter(this.aggregates.pop().getAttribute());
+			}
+
+			this.query = undefined;
+		}
 	}
 
 	return Aggregation;
+
+})();
+
+
+var Merge = (function() {
+
+	Merge.prototype = Object.create(Node.prototype);
+	Merge.prototype.constructor = Merge;
+
+	Merge.prototype.relations;
+
+	Merge.prototype.schema;
+
+	function Merge(id) {
+		Node.call(this, id, true)
+
+		this.title = 'Merge';
+
+		this.output = new Source(this);
+
+		this.relations = [];
+
+		this.type = new PMerge(this);
+		this.addParameter(this.type);
+
+		this.addRelation();
+	}
+
+	Merge.prototype.addRelation = function() {
+		var relation = new PRelation(this, UILabel);
+
+		this.relations.push(relation);
+
+		this.addParameter(relation);
+	}
+
+	Merge.prototype.update = function() {
+		Node.prototype.update.call(this);
+
+		for(var i = this.relations.length-2; i >= 0; i--) {
+
+			if(!this.relations[i].isConnected()) {
+				console.log('remove ', this.relations[i]);
+				var relation = this.relations[i];
+
+				this.removeParameter(relation);
+
+				this.relations.splice(i, 1);
+			}
+		}
+
+		if(this.relations.peek().getQuery()) {
+			this.addRelation();
+		}
+
+		this.query = undefined;
+
+		for(var i = 0; i < this.relations.length; i++) {
+			if(this.relations[i].getQuery()) {
+				if(this.query) {
+					this.query = new Set(this.query, this.relations[i].getQuery(), this.type.getValue());
+				}
+				else {
+					this.query = this.relations[i].getQuery();
+				}
+			}
+		}
+	}
+
+	return Merge;
+
+})();
+
+
+var Rename = (function() {
+
+	Rename.prototype = Object.create(Node.prototype);
+	Rename.prototype.constructor = Rename;
+
+	Rename.prototype.relation;
+	Rename.prototype.attribute;
+	Rename.prototype.name;
+
+	function Rename(id) {
+		Node.call(this, id, true);
+
+		this.title = 'Rename';
+
+		this.output = new Source(this);
+
+		this.relation = new PRelation(this, UILabel);
+		this.addParameter(this.relation);
+
+		this.attribute = new PAttribute(this, true);
+		this.attribute.setRelation(this.relation);
+		this.addParameter(this.attribute);
+
+		this.name = new PConstant(this);
+		this.addParameter(this.name);
+	}
+
+	Rename.prototype.update = function() {
+		if(this.relation.getQuery() && this.attribute.getValue()) {
+			this.query = this.relation.getQuery().clone();
+			this.attribute.getValue().setAlias(this.name.getValue());
+		}
+	}
+
+	return Rename;
 
 })();
 
@@ -231,14 +472,24 @@ var Output = (function() {
 	Output.prototype.relation;
 
 	function Output(id) {
-		Node.call(this, id);
+		Node.call(this, id, false);
 
 		this.title = 'Output';
 
-		this.relation = new Relation(this, UILabel);
-		this.parameters.push(this.relation);
+		this.relation = new PRelation(this, UILabel);
+		this.addParameter(this.relation);
+	}
+
+	Output.prototype.update = function() {
+		if(this.relation.getQuery()) {
+			Util.setOutput(this.relation.getQuery().getQuery());
+		}
+		else {
+			Util.setOutput('');
+		}
 	}
 
 	return Output;
 
 })();
+

@@ -18,6 +18,24 @@ Util.loadJSON = function(url, callback) {
 	request.send();
 }
 
+Util.clone = function(object) {
+    return JSON.parse(JSON.stringify(object));
+}
+
+Util.extendArray = function() {
+    Array.prototype.remove = function(element) {
+        for(var i = this.length-1; i >= 0; i--) {
+            if(this[i] == element) {
+                this.splice(i, 1);
+            }
+        }
+    }
+
+    Array.prototype.peek = function() {
+        return this.length ? this[this.length-1] : null;
+    }
+}
+
 //JSPlumb
 
 Util.style_target = {
@@ -52,8 +70,12 @@ Util.getInstance = function() {
     return Util.instance;
 }
 
-Util.draggable = function(element) {
-    Util.getInstance().draggable(element);
+Util.getContainer = function() {
+    return Util.getInstance().getContainer();
+}
+
+Util.setOutput = function(output) {
+    document.getElementById('output').innerHTML = output;
 }
 
 //DOM

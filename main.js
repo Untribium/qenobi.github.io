@@ -1,36 +1,47 @@
-var container;
-
 var node_counter = 0;
 
 jsPlumb.ready(function() {
 
 	Util.extendDOM();
+	Util.extendArray();
+
 
 	console.log("---INIT---")
 
-	container = document.getElementById('container');
+	Config.readTypes();
+	Config.readSchema(Sample.schema);
+
+	var container = Util.getDiv();
+	container.addClass('container');
+	container.id = 'container';
+
+	document.body.appendChild(container);
+
+	var output = Util.getElement('pre');
+	output.id = 'output';
+
+	container.appendChild(output);
 
 	console.log("create instance");
 	
 	var instance = Util.getInstance();
 
-	instance.setContainer(container);
+	instance.setContainer(container);	
 
-	instance.doWhileSuspended(function() {		
+	instance.doWhileSuspended(function() {
+
+		console.log('binding events');
 		
 		//binding
 		instance.bind('connection', function(connection, event) {
 
-			console.log(connection);
+			//console.log(connection);
 
 			var source = connection.source.reference;
 			var target = connection.target.reference;
 			
-			// console.log('attaching source');
 			source.attach(target);
-			// console.log('attaching target');
 			target.attach(source);
-			// console.log('attaching done');
 		});
 
 		instance.bind('connectionDetached', function(connection, event) {
@@ -39,17 +50,16 @@ jsPlumb.ready(function() {
 
 			var source = connection.source.reference;
 			var target = connection.target.reference;
-			
-			// console.log('detaching source');
-			source.detach(target);
-			// console.log('detaching target');
-			target.detach(source);
-			// console.log('detaching done');
+
+			if(source && target) {			
+				source.detach(target);
+				target.detach(source);
+			}
 		});
 
 		instance.bind('connectionMoved', function(connection, event) {
 
-			console.log(connection);
+			//console.log(connection);
 
 			var source = connection.originalSourceEndpoint.element.reference;
 			var old_target = connection.originalTargetEndpoint.element.reference;
@@ -57,13 +67,19 @@ jsPlumb.ready(function() {
 			source.detach(old_target);
 			old_target.detach(source);
 
+			//no need to call attach, jsPlumb throws an additional 'connection' event
+
 		});		
 	});
 
+	addNode(Output);
+
 });
 
-function addNode(node) {
-	container.appendChild(node.buildUI().getElement());
+function addNode(type) {
+	var node = new type(node_counter);
+
+	Util.getContainer().appendChild(node.buildUI().getElement());
 
 	node_counter++;
 }
