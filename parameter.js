@@ -1,3 +1,4 @@
+
 /*Parameters*/
 
 var Parameter = (function() {
@@ -83,6 +84,12 @@ var Parameter = (function() {
 		}
 	}
 
+	Parameter.prototype.setVisible = function(flag) {
+		if(this.element) {
+			this.element.setVisible(false);
+		}
+	}
+
 	Parameter.prototype.notify = function() {
 		console.log('notify@Parameter:\t', this);
 
@@ -99,7 +106,6 @@ var Parameter = (function() {
 		if(this.isConnected()) {
 			this.value = this.input.getValue();
 			this.query = this.input.getQuery();
-			//this.query.resetMarkers();
 		}
 		else if(this.element && this.element.getValue()) {
 			this.value = this.element.getValue();
@@ -113,9 +119,6 @@ var Parameter = (function() {
 		if(this.input && this.element) {
 			this.element.setConnected(this.isConnected());
 		}
-
-		//scope
-
 	}
 
 	Parameter.prototype.checkDependencies = function() {

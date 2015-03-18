@@ -1,3 +1,4 @@
+
 /*Nodes*/
 
 var Node = (function() {
@@ -211,8 +212,6 @@ var Constraint = (function() {
 
 		//Join
 		this.join = new PJoin(this);
-		this.join.addDependency(this.relation1);
-		this.join.addDependency(this.relation2);
 		this.addParameter(this.join);
 	}
 
@@ -231,36 +230,40 @@ var Constraint = (function() {
 
 			var cop = this.comparison.getValue();
 			var jop = this.join.getValue();
+			if(a1 && a2) {
+				var c = new Comparison(a1, a2, cop);
 
-			var c = new Comparison(a1, a2, cop);
+				var r, w;
+				
+				if(q1 != q2 && q2.getCardinality() != 1) {
+					r = new Join(q1.getRelation().clone(), q2.getRelation().clone(), jop, c);
 
-			var r, w;
-			
-			if(q1 != q2 && q2.getCardinality() != 1) {
-				r = new Join(q1.getRelation().clone(), q2.getRelation().clone(), jop, c);
-
-				if(q1.getCondition() && q2.getCondition()) {
-					w = new Connective(q1.getCondition(), q2.getCondition(), Config.connectiveTypes[0]);
+					if(q1.getCondition() && q2.getCondition()) {
+						w = new Connective(q1.getCondition(), q2.getCondition(), Config.connectiveTypes[0]);
+					}
+					else {
+						w = q1.getCondition() || q2.getCondition();
+					}
 				}
 				else {
-					w = q1.getCondition() || q2.getCondition();
+					r = q1.getRelation().clone();
+
+					if(q1.getCondition()) {
+						w = new Connective(q1.getCondition(), c, Config.connectiveTypes[0]);
+					}
+					else {
+						w = c;
+					}
 				}
+
+				this.query.setRelation(r);
+				this.query.setCondition(w);
+
+				this.query.setCardinality('t'+this.id);
 			}
 			else {
-				r = q1.getRelation().clone();
-
-				if(q1.getCondition()) {
-					w = new Connective(q1.getCondition(), c, Config.connectiveTypes[0]);
-				}
-				else {
-					w = c;
-				}
+				this.query = false;
 			}
-
-			this.query.setRelation(r);
-			this.query.setCondition(w);
-
-			this.query.setCardinality('t'+this.id);
 		}
 		else {
 			this.query = null;
@@ -396,9 +399,14 @@ var Merge = (function() {
 				console.log('remove ', this.relations[i]);
 				var relation = this.relations[i];
 
-				this.removeParameter(relation);
+				//this.removeParameter(relation); //doesn't work, presumably bug in jsPlumb
+				relation.setVisible(false);
 
 				this.relations.splice(i, 1);
+
+				if(this.element) {
+					this.element.update();
+				}
 			}
 		}
 
@@ -456,6 +464,7 @@ var Rename = (function() {
 		if(this.relation.getQuery() && this.attribute.getValue()) {
 			this.query = this.relation.getQuery().clone();
 			this.attribute.getValue().setAlias(this.name.getValue());
+			console.log(this.query.getQuery());
 		}
 	}
 
