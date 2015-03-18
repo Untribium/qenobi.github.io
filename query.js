@@ -42,50 +42,46 @@ var Query = (function() {
 		this.cardinality = cardinality;
 	}
 
-	Query.prototype.resetMarkers = function() {
-		var attributes = this.getAttributes();
-		for(var i = 0; i < attributes.length; i++) {
-			attributes[i].resetMarker();
-		}
-	}
-
-	Query.prototype.getQuery = function() {
+	Query.prototype.getQuery = function(indent) {
+		var ind = Util.indent(indent || 0);
 		var result = '';
 
-		result += 'SELECT '+this.getProjection();
-		result += '\nFROM '+this.relation.getQuery();
+		result += ind+'SELECT\n'+this.getProjection(indent+1);
+		result += '\n'+ind+'FROM\n'+this.relation.getQuery(indent+1);
 		if(this.condition){
-			result += '\nWHERE '+this.condition.getQuery();
+			result += '\n'+ind+'WHERE\n'+this.condition.getQuery(indent+1);
 		}
 		if(this.groupBy.length) {
-			result += '\nGROUP BY '+this.getGroupBy();
+			result += '\n'+ind+'GROUP BY\n'+this.getGroupBy(indent+1);
 		}
 
 		return result;
 
 	}
 
-	Query.prototype.getProjection = function() {
+	Query.prototype.getProjection = function(indent) {
 		if(this.projection.length) {
+			var ind = Util.indent(indent);
 			var result = '';
 
 			for(var i = 0; i < this.projection.length; i++) {
-				result += ((result) ? ', ' : '')+this.projection[i].getProjection();
+				result += ((result) ? ',\n' : '')+ind+this.projection[i].getProjection();
 			}
 
 			return result;
 		}
 		else {
-			return this.relation.getProjection();
+			return this.relation.getProjection(indent);
 		}
 	}
 
-	Query.prototype.getGroupBy = function() {
+	Query.prototype.getGroupBy = function(indent) {
 		if(this.groupBy.length) {
+			var ind = Util.indent(indent);
 			var result = '';
 
 			for(var i = 0; i < this.groupBy.length; i++) {
-				result += ((result) ? ', ' : '')+this.groupBy[i].getQuery();
+				result += ((result) ? ',\n' : '')+ind+this.groupBy[i].getQuery();
 			}
 
 			return result;
@@ -99,7 +95,7 @@ var Query = (function() {
 		var result = new Query(this.relation.clone(), this.condition);
 		result.setCardinality(this.cardinality);
 
-		//projection ignored, must be null on clone
+		//projection ignored, will always be null on clone
 		//condition not cloned because new attributes not available (ugly, but works)
 
 		return result;
@@ -124,8 +120,13 @@ var Set = (function() {
 		this.type = type;
 	}
 
-	Set.prototype.getQuery = function() {
-		return this.set1.getQuery()+'\n'+this.type.getValue()+'\n'+this.set2.getQuery();
+	Set.prototype.getQuery = function(indent) {
+		var ind = Util.indent(indent || 0);
+		var result = '';
+		result += this.set1.getQuery(indent+1);
+		result += '\n'+ind+this.type.getValue()+'\n';
+		result += this.set2.getQuery(indent+1);
+		return result;
 	}
 
 	return Set;
@@ -160,7 +161,7 @@ var AbstractRelation = (function() {
 		this.alias = alias;
 	}
 
-	AbstractRelation.prototype.getProjection = function() {
+	AbstractRelation.prototype.getProjection = function(indent) {
 		var aliased = false;
 
 		for(var i = 0; i < this.attributes.length; i++) {
@@ -170,15 +171,16 @@ var AbstractRelation = (function() {
 			}
 		}
 
+		var ind = Util.indent(indent);
 		var result = '';
 
 		if(aliased) {
 			for(var i = 0; i < this.attributes.length; i++) {
-				result += ((result) ? ', ' : '')+this.attributes[i].getProjection();
+				result += ((result) ? ',\n' : '')+ind+this.attributes[i].getProjection();
 			}
 		}
 		else {
-			result = this.alias+'.*';
+			result = ind+this.alias+'.*';
 		}
 
 		return result;
@@ -244,17 +246,14 @@ var Subquery = (function() {
 		}
 	}
 
-	Subquery.prototype.getQuery = function() {
-		return '('+this.query.getQuery()+') '+this.alias;
+	Subquery.prototype.getQuery = function(indent) {
+		var ind = Util.indent(indent || 0);
+		return '(\n'+this.query.getQuery(indent+1)+ind+') '+this.alias;
 	}
 
 	Subquery.prototype.clone = function() {
 		var clone = new Subquery(this.query, this.alias);
 		//don't clone query, won't be changed
-
-		for(var i = 0; i < this.attributes.length; i++) {
-			clone.addAttribute(this.attributes[i].clone());
-		}
 
 		return clone;
 	}
@@ -286,15 +285,16 @@ var Join = (function() {
 		return this.table1.getAttributes().concat(this.table2.getAttributes());
 	}
 
-	Join.prototype.getProjection = function() {
-		return this.table1.getProjection()+', '+this.table2.getProjection();
+	Join.prototype.getProjection = function(indent) {
+		return this.table1.getProjection(indent)+',\n'+this.table2.getProjection(indent);
 	}
 
-	Join.prototype.getQuery = function() {
-		var q_t1 = this.table1.getQuery();
-		var q_t2 = this.table2.getQuery();
+	Join.prototype.getQuery = function(indent) {
+		var ind = Util.indent(indent);
+		var q_t1 = this.table1.getQuery(indent+1);
+		var q_t2 = this.table2.getQuery(indent+1);
 		var q_c = this.condition.getQuery();
-		return '('+q_t1+' '+this.type.getValue()+' JOIN '+q_t2+' ON '+q_c+')';
+		return '(\n'+ind+q_t1+' '+this.type.getValue()+' JOIN '+q_t2+'\n'+ind+'  ON '+q_c+'\n'+ind+')';
 	}
 
 	Join.prototype.clone = function() {
@@ -315,14 +315,11 @@ var Attribute = (function() {
 	Attribute.prototype.relation;
 	Attribute.prototype.type;
 
-	Attribute.prototype.marker;
-
 	function Attribute(name, display, type, relation) {
 		this.name = name;
 		this.display = display;
 		this.type = type;
 		this.relation = relation;
-		this.resetMarker();
 	}
 
 	Attribute.prototype.getType = function() { return this.type; }
@@ -344,19 +341,6 @@ var Attribute = (function() {
 		this.relation = relation;
 	}
 
-	Attribute.prototype.getMarker = function() {
-		return this.marker;
-	}
-
-	Attribute.prototype.setMarker = function(marker) {
-		this.marker = marker;
-		marker.setAttribute(this);
-	}
-
-	Attribute.prototype.resetMarker = function() {
-		this.marker = new Marker(this);
-	}
-
 	Attribute.prototype.getQuery = function() {
 		return this.relation.getAlias()+'.'+this.name;
 	}
@@ -365,7 +349,6 @@ var Attribute = (function() {
 		return this.getQuery()+((this.alias) ? ' AS '+this.alias : '');
 	}
 
-	//hard clone sets new marker. Used in source enpoints to 
 	Attribute.prototype.clone = function() {
 		var clone = new Attribute(this.name, this.display, this.type, this.relation);
 		if(this.alias) {
@@ -379,27 +362,6 @@ var Attribute = (function() {
 	}
 
 	return Attribute;
-
-})();
-
-//passed along when cloning attribute, basically a pointer
-var Marker = (function() {
-
-	Marker.prototype.attribute;
-
-	function Marker(attribute) {
-		this.setAttribute(attribute);
-	}
-
-	Marker.prototype.getAttribute = function() {
-		return this.attribute;
-	}
-
-	Marker.prototype.setAttribute = function(attribute) {
-		this.attribute = attribute;
-	}
-
-	return Marker;
 
 })();
 
@@ -455,7 +417,8 @@ var Aggregate = (function() {
 	}
 
 	Aggregate.prototype.migrate = function(relation) {
-		return new Attribute(this.alias, this.display, this.attribute.getType(), relation);
+		var outType = this.type.getOutputType(this.attribute.getType());
+		return new Attribute(this.alias, this.display, outType, relation);
 	}
 
 	return Aggregate;
@@ -490,7 +453,7 @@ var Comparison = (function() {
 
 })();
 
-//logical connective (and, or)
+//logical connective (and)
 var Connective = (function() {
 
 	Connective.prototype.cond1;
@@ -515,5 +478,29 @@ var Connective = (function() {
 	}
 
 	return Connective;
+
+})();
+
+
+var Exists = (function() {
+
+	Exists.prototype.query;
+
+	Exists.prototype.type;
+
+	function Exists(query, type) {
+		this.query = query;
+		this.type = type;
+	}
+
+	Exists.prototype.getQuery = function() { return this.query; }
+
+	Exists.prototype.getType = function() { return this.type; }
+
+	Exists.prototype.getQuery = function() {
+		return this.type.getValue()+'('+this.query.getQuery()+')'
+	}
+
+	return Exists;
 
 })();

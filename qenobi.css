@@ -135,6 +135,8 @@ body {
 
 .parameter {
 	margin: 5px 0px;
+	padding-left: 15px;
+
 	font-family: Arial;
 	font-size: 13px;
 }
@@ -155,7 +157,7 @@ body {
 
 	border: 1px solid #A9A9A9;
 	border-right: 0px;
-	border-left: 0px;
+	/*border-left: 0px;*/
 
 	-webkit-box-sizing: border-box;
 	-moz-box-sizing: border-box;
@@ -193,7 +195,9 @@ p.uiel {
 }
 
 /*parameter has input (left)*/
-.input {}
+.input {
+	padding-left: 0px;
+}
 
 /*parameter has output (right)*/
 .output {}

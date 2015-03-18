@@ -206,12 +206,12 @@ var PSelection = (function() {
 
 		this.options = [];
 
-		this.input = new Target(this);
+		//this.input = new Target(this);
 	}
 
 	PSelection.prototype.buildUI = function() {
 		this.element = new UISelection(this, this.title, this.required);
-		this.element.setInput(this.input.buildUI());
+		//this.element.setInput(this.input.buildUI());
 
 		this.element.setOptions(this.options);
 
@@ -286,7 +286,7 @@ var PAttribute = (function() {
 		//Parameter.prototype.update.call(this);
 
 		if(this.element && this.element.getValue()) {
-			this.value = this.element.getValue().getMarker().getAttribute();
+			this.value = this.element.getValue();
 		}
 	}
 
@@ -390,7 +390,7 @@ var PConstant = (function() {
 	function PConstant(parent) {
 		Parameter.call(this, parent, 'Constant', UIConstant, true);
 
-		this.input = new Target(this);
+		//this.input = new Target(this);
 	}
 
 	return PConstant;

@@ -176,13 +176,9 @@ var UIParameter = (function() {
 		this.element.reference = this.parent;
 	}
 
-	UIParameter.prototype.getElement = function() {
-		return this.element;
-	}
+	UIParameter.prototype.getElement = function() { return this.element; }
 
-	UIParameter.prototype.getContent = function() {
-		return null;
-	}
+	UIParameter.prototype.getContent = function() {	return null; }
 
 	UIParameter.prototype.setInput = function(uiendpoint) {
 		this.input = uiendpoint;

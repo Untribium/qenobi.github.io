@@ -482,7 +482,7 @@ var Output = (function() {
 
 	Output.prototype.update = function() {
 		if(this.relation.getQuery()) {
-			Util.setOutput(this.relation.getQuery().getQuery());
+			Util.setOutput(this.relation.getQuery().getQuery(0));
 		}
 		else {
 			Util.setOutput('');

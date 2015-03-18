@@ -2,6 +2,38 @@
 function Util() {
 }
 
+//General
+
+Util.extendArray = function() {
+    Array.prototype.remove = function(element) {
+        for(var i = this.length-1; i >= 0; i--) {
+            if(this[i] == element) {
+                this.splice(i, 1);
+            }
+        }
+    }
+
+    Array.prototype.peek = function() {
+        return this.length ? this[this.length-1] : null;
+    }
+}
+
+Util.extendDOM = function() {
+    HTMLElement.prototype.hasClass = function(clazz) { Util.hasClass(this, clazz); };
+    HTMLElement.prototype.addClass = function(clazz) { Util.addClass(this, clazz); };
+    HTMLElement.prototype.removeClass = function(clazz) { Util.removeClass(this, clazz); };
+    HTMLElement.prototype.toggleClass = function(clazz) { Util.toggleClass(this, clazz); };
+}
+
+Util.indent = function(indent) {
+    var result = '';
+    while(indent) {
+        result += '  ';
+        indent--;
+    }
+    return result;
+}
+
 //JSON
 
 Util.loadJSON = function(url, callback) {
@@ -20,20 +52,6 @@ Util.loadJSON = function(url, callback) {
 
 Util.clone = function(object) {
     return JSON.parse(JSON.stringify(object));
-}
-
-Util.extendArray = function() {
-    Array.prototype.remove = function(element) {
-        for(var i = this.length-1; i >= 0; i--) {
-            if(this[i] == element) {
-                this.splice(i, 1);
-            }
-        }
-    }
-
-    Array.prototype.peek = function() {
-        return this.length ? this[this.length-1] : null;
-    }
 }
 
 //JSPlumb
@@ -79,13 +97,6 @@ Util.setOutput = function(output) {
 }
 
 //DOM
-
-Util.extendDOM = function() {
-    HTMLElement.prototype.hasClass = function(clazz) { Util.hasClass(this, clazz); };
-    HTMLElement.prototype.addClass = function(clazz) { Util.addClass(this, clazz); };
-    HTMLElement.prototype.removeClass = function(clazz) { Util.removeClass(this, clazz); };
-    HTMLElement.prototype.toggleClass = function(clazz) { Util.toggleClass(this, clazz); };
-}
 
 Util.getElement = function(type) {
     return document.createElement(type);

@@ -41,7 +41,7 @@ Config.readAggregateTypes = function() {
 	var types = Resources.aggregateTypes;
 
 	for(var i = 0; i < types.length; i++) {
-		Config.aggregateTypes.push(new AggregateType(types[i].display, types[i].value));
+		Config.aggregateTypes.push(new AggregateType(types[i].display, types[i].value, types[i].output));
 	}
 
 }
@@ -143,7 +143,14 @@ var AggregateType = (function() {
 		this.output = output;
 	}
 
-	AggregateType.prototype.getOutputType = function() { return this.output; }
+	AggregateType.prototype.getOutputType = function(input) {
+		if(this.output) {
+			return this.output;
+		}
+		else {
+			return input;
+		}
+	}
 
 	return AggregateType;
 
@@ -184,7 +191,7 @@ Resources.comparisonTypes = [
 	},
 	{
 		display: '!=',
-		value: '!='
+		value: '<>'
 	},
 	{
 		display: '>',
@@ -207,19 +214,33 @@ Resources.comparisonTypes = [
 Resources.joinTypes = [
 	{
 		display: 'inner',
-		value: 'INNER'
+		value: 'INNER',
+		join: true
 	},
 	{
 		display: 'left',
-		value: 'LEFT OUTER'
+		value: 'LEFT OUTER',
+		join: true
 	},
 	{
 		display: 'right',
-		value: 'RIGHT OUTER'
+		value: 'RIGHT OUTER',
+		join: true
 	},
 	{
 		display: 'full',
-		value: 'FULL OUTER'
+		value: 'FULL OUTER',
+		join: true
+	},
+	{
+		display: 'semi',
+		value: 'EXISTS',
+		join: false
+	},
+	{
+		display: 'anti',
+		value: 'NOT EXISTS',
+		join: false
 	}
 ];
 
@@ -233,7 +254,7 @@ Resources.mergeTypes = [
 		value: 'INTERSECT'
 	},
 	{
-		display: 'minus',
+		display: 'difference',
 		value: 'MINUS'
 	}
 ];
@@ -241,7 +262,7 @@ Resources.mergeTypes = [
 Resources.aggregateTypes = [
 	{
 		display: 'group',
-		value: 'GROUP' //never used
+		value: 'GROUP' //not used
 	},
 	{
 		display: 'max',
