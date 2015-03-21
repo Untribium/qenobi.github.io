@@ -86,7 +86,7 @@ var Parameter = (function() {
 
 	Parameter.prototype.setVisible = function(flag) {
 		if(this.element) {
-			this.element.setVisible(false);
+			this.element.setVisible(flag);
 		}
 	}
 
@@ -208,13 +208,10 @@ var PSelection = (function() {
 		Parameter.call(this, parent, title, UISelection, required);
 
 		this.options = [];
-
-		//this.input = new Target(this);
 	}
 
 	PSelection.prototype.buildUI = function() {
 		this.element = new UISelection(this, this.title, this.required);
-		//this.element.setInput(this.input.buildUI());
 
 		this.element.setOptions(this.options);
 

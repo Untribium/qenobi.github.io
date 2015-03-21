@@ -160,8 +160,7 @@ var Target = (function() {
 
 	Target.prototype.update = function() {
 		Endpoint.prototype.update.call(this);
-		this.value = this.connected ? this.neighbors[0].value : null;
-		this.query = this.connected ? this.neighbors[0].query : null;
+		this.query = this.connected ? this.neighbors[0].query.clone() : null;
 	}
 
 	return Target;

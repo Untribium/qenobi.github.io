@@ -270,8 +270,10 @@ var UISelection = (function() {
 	}
 
 	UISelection.prototype.setOptions = function(options) {
-		//save old value
-		var old = this.getValue();
+		if(this.getValue()) {
+			//save old value
+			var old = this.getValue().getDisplay();
+		}
 
 		this.options = options;
 
@@ -282,13 +284,13 @@ var UISelection = (function() {
 
 		//add empty option
 		if(!this.required) {
-			var empty = new Option('', null, false, false);
+			var empty = new Option('', -1, false, false);
 			this.uielement.add(empty);
 		}
 
 		//add new options, select old value if in new options
 		for(var i = 0; i < options.length; i++) {
-			this.uielement.add(new Option(options[i].getDisplay(), i, false, options[i] == old));
+			this.uielement.add(new Option(options[i].getDisplay(), i, false, options[i].getDisplay() == old));
 		}
 	}
 

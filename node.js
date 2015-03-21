@@ -146,7 +146,7 @@ var Table = (function() {
 	function Table(id) {
 		Node.call(this, id, true);
 
-		this.title = 'Table';
+		this.title = 'Table (t'+this.id+')';
 
 		this.output = new Source(this);
 
@@ -230,13 +230,33 @@ var Constraint = (function() {
 
 			var cop = this.comparison.getValue();
 			var jop = this.join.getValue();
+
 			if(a1 && a2) {
 				var c = new Comparison(a1, a2, cop);
 
 				var r, w;
 				
-				if(q1 != q2 && q2.getCardinality() != 1) {
+				if(q1.getCardinality() != q2.getCardinality() && q2.getCardinality() != 1) {
+					this.join.setVisible(true);
+
 					r = new Join(q1.getRelation().clone(), q2.getRelation().clone(), jop, c);
+
+					var q1_a = q1.getAttributes();
+					var q2_a = q2.getAttributes();
+
+					//resolve name clashes (proof of concept)
+					for(var i = 0; i < q2_a.length; i++) {
+						for(var j = 0; j < q1_a.length; j++) {
+							if(q2_a[i].getName() == q1_a[j].getName()) {
+								q2_a[i].setAlias(q2_a[i].getRelation().getAlias()+'_a'+i);
+								q2_a[i].setDisplay(q2_a[i].getRelation().getAlias()+'.'+q2_a[i].getName());
+								console.log(q1_a[j]);
+								q1_a[j].setDisplay(q1_a[j].getRelation().getAlias()+'.'+q1_a[j].getName());
+								this.attribute1.update();
+								this.attribute2.update();
+							}
+						}
+					}
 
 					if(q1.getCondition() && q2.getCondition()) {
 						w = new Connective(q1.getCondition(), q2.getCondition(), Config.connectiveTypes[0]);
@@ -246,6 +266,8 @@ var Constraint = (function() {
 					}
 				}
 				else {
+					this.join.setVisible(false);
+
 					r = q1.getRelation().clone();
 
 					if(q1.getCondition()) {
@@ -262,10 +284,11 @@ var Constraint = (function() {
 				this.query.setCardinality('t'+this.id);
 			}
 			else {
-				this.query = false;
+				this.query = null;
 			}
 		}
 		else {
+			this.join.setVisible(false);
 			this.query = null;
 		}
 	}
@@ -312,36 +335,49 @@ var Aggregation = (function() {
 		Node.prototype.update.call(this);
 
 		if(this.relation.getQuery()) {
+			//remove empty parameters
 			for(var i = this.aggregates.length-2; i >= 0; i--) {
-
+				console.log(this.aggregates[i].getAttribute().getValue());
 				if(!this.aggregates[i].getAttribute().getValue()) {
 					this.removeParameter(this.aggregates.splice(i, 1)[0].getAttribute());
+				}
+				else {
+					this.aggregates[i].setVisible(true);
 				}
 			}
 
 			//if list empty or last element set, add new attribute
 			if(!this.aggregates.length || this.aggregates.peek().getAttribute().getValue()) {
 				this.addAttribute();
+				this.aggregates.peek().setVisible(false);
 			}
 
 			var query = this.relation.getQuery().clone();
+
+			var agg = false;
+			var groupBy = [];
 
 			for(var i = 0; i < this.aggregates.length; i++) {
 				var attribute = this.aggregates[i].getAttribute().getValue();
 				var type = this.aggregates[i].getValue();
 				if(attribute) {
 					if(type.getValue() != 'GROUP') {
+						agg = true;
 						query.projection.push(new Aggregate(attribute, type, 'a'+i));
 					}
 					else {
 						query.projection.push(attribute);
-						query.groupBy.push(attribute);
+						groupBy.push(attribute);
 					}
 				}
 			}
 
-			this.query = new Query(new Subquery(query, 't'+this.id));
+			//only set GroupBy if there is an aggregation in the projection
+			if(agg) {
+				query.groupBy = groupBy;
+			}
 
+			this.query = new Query(new Subquery(query, 't'+this.id));
 		}
 		//remove all aggregates if no relation connected
 		else {
@@ -414,12 +450,13 @@ var Merge = (function() {
 			this.addRelation();
 		}
 
-		this.query = undefined;
+		this.query = null;
 
 		for(var i = 0; i < this.relations.length; i++) {
 			if(this.relations[i].getQuery()) {
 				if(this.query) {
-					this.query = new Set(this.query, this.relations[i].getQuery(), this.type.getValue());
+					var set = new Set(this.query, this.relations[i].getQuery(), this.type.getValue());
+					this.query = new Query(new Subquery(set, 't'+this.id));
 				}
 				else {
 					this.query = this.relations[i].getQuery();
@@ -461,10 +498,18 @@ var Rename = (function() {
 	}
 
 	Rename.prototype.update = function() {
-		if(this.relation.getQuery() && this.attribute.getValue()) {
+		var attr = this.attribute.getValue();
+		if(this.relation.getQuery() && attr) {
 			this.query = this.relation.getQuery().clone();
-			this.attribute.getValue().setAlias(this.name.getValue());
-			console.log(this.query.getQuery());
+
+			var attrs = this.query.getRelation().getAttributes();
+
+			for(var i = 0; i < attrs.length; i++) {
+				if(attrs[i].getDisplay() == attr.getDisplay()) {
+					attrs[i].setAlias(this.name.getValue());
+					attrs[i].setDisplay(this.name.getValue());
+				}
+			}
 		}
 	}
 
@@ -491,7 +536,7 @@ var Output = (function() {
 
 	Output.prototype.update = function() {
 		if(this.relation.getQuery()) {
-			Util.setOutput(this.relation.getQuery().getQuery(0));
+			Util.setOutput(this.relation.getQuery().getQuery(0)+';');
 		}
 		else {
 			Util.setOutput('');

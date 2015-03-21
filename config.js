@@ -231,16 +231,6 @@ Resources.joinTypes = [
 		display: 'full',
 		value: 'FULL OUTER',
 		join: true
-	},
-	{
-		display: 'semi',
-		value: 'EXISTS',
-		join: false
-	},
-	{
-		display: 'anti',
-		value: 'NOT EXISTS',
-		join: false
 	}
 ];
 

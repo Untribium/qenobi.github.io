@@ -220,6 +220,11 @@ p.uiel {
 	background-color: hsla(80, 60%, 40%, 1);
 	float: right;
 	margin-left: 5px;
+
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
 .target {
@@ -228,10 +233,16 @@ p.uiel {
 	background-color: hsla(80, 60%, 40%, 1);
 	float: left;
 	margin-right: 5px;
+
+	-webkit-box-sizing: border-box;
+	-moz-box-sizing: border-box;
+	-ms-box-sizing: border-box;
+	box-sizing: border-box;
 }
 
-.active {
-	background-color: red;
+.target.active {
+	/*background-color: hsla(80, 75%, 30%, 1);*/
+	border: 1px dotted black;
 }
 
 .square svg * {
@@ -241,10 +252,6 @@ p.uiel {
 .square {
 	margin-left: 5px;
 }
-
-
-
-
 
 .hidden {
 	display: none;

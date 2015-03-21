@@ -44,12 +44,13 @@ var Query = (function() {
 
 	Query.prototype.getQuery = function(indent) {
 		var ind = Util.indent(indent || 0);
+		var ind_ = ind+'  ';
 		var result = '';
 
 		result += ind+'SELECT\n'+this.getProjection(indent+1);
-		result += '\n'+ind+'FROM\n'+this.relation.getQuery(indent+1);
+		result += '\n'+ind+'FROM\n'+ind_+this.relation.getQuery(indent+1);
 		if(this.condition){
-			result += '\n'+ind+'WHERE\n'+this.condition.getQuery(indent+1);
+			result += '\n'+ind+'WHERE\n'+ind_+this.condition.getQuery(indent+1);
 		}
 		if(this.groupBy.length) {
 			result += '\n'+ind+'GROUP BY\n'+this.getGroupBy(indent+1);
@@ -127,6 +128,15 @@ var Set = (function() {
 		result += '\n'+ind+this.type.getValue()+'\n';
 		result += this.set2.getQuery(indent+1);
 		return result;
+	}
+
+	Set.prototype.getAttributes = function() {
+		return this.set1.getAttributes();
+	}
+
+	Set.prototype.clone = function() {
+		//no clone required
+		return this;
 	}
 
 	return Set;
@@ -248,7 +258,7 @@ var Subquery = (function() {
 
 	Subquery.prototype.getQuery = function(indent) {
 		var ind = Util.indent(indent || 0);
-		return '(\n'+this.query.getQuery(indent+1)+ind+') '+this.alias;
+		return '(\n'+this.query.getQuery(indent+1)+'\n'+ind+') '+this.alias;
 	}
 
 	Subquery.prototype.clone = function() {
@@ -294,7 +304,7 @@ var Join = (function() {
 		var q_t1 = this.table1.getQuery(indent+1);
 		var q_t2 = this.table2.getQuery(indent+1);
 		var q_c = this.condition.getQuery();
-		return '(\n'+ind+q_t1+' '+this.type.getValue()+' JOIN '+q_t2+'\n'+ind+'  ON '+q_c+'\n'+ind+')';
+		return '(\n'+ind+'  '+q_t1+' '+this.type.getValue()+' JOIN '+q_t2+'\n'+ind+'  ON '+q_c+'\n'+ind+')';
 	}
 
 	Join.prototype.clone = function() {
@@ -330,10 +340,13 @@ var Attribute = (function() {
 
 	Attribute.prototype.setAlias = function(alias) {
 		this.alias = alias;
-		this.display = alias;
 	}
 
 	Attribute.prototype.getDisplay = function() { return this.display; }
+
+	Attribute.prototype.setDisplay = function(display) {
+		this.display = display;
+	}
 
 	Attribute.prototype.getRelation = function() { return this.relation; }
 
@@ -342,17 +355,18 @@ var Attribute = (function() {
 	}
 
 	Attribute.prototype.getQuery = function() {
-		return this.relation.getAlias()+'.'+this.name;
+		return this.relation.getAlias()+'.['+this.name+']';
 	}
 
 	Attribute.prototype.getProjection = function() {
-		return this.getQuery()+((this.alias) ? ' AS '+this.alias : '');
+		return this.getQuery()+((this.alias) ? ' AS ['+this.alias+']' : '');
 	}
 
 	Attribute.prototype.clone = function() {
 		var clone = new Attribute(this.name, this.display, this.type, this.relation);
 		if(this.alias) {
 			clone.setAlias(this.alias);
+			clone.setDisplay(this.display);
 		}
 		return clone;
 	}
@@ -409,7 +423,7 @@ var Aggregate = (function() {
 	Aggregate.prototype.getDisplay = function() { return this.display; }
 
 	Aggregate.prototype.getProjection = function() {
-		return this.type.getValue()+'('+this.attribute.getQuery()+') AS '+this.alias;
+		return this.type.getValue()+'('+this.attribute.getQuery()+') AS ['+this.alias+']';
 	}
 
 	Aggregate.prototype.clone = function() {
