@@ -1,0 +1,70 @@
+@inproceedings{codd1971dbs,
+ author = {Codd, E. F.},
+ title = {A Data Base Sublanguage Founded on the Relational Calculus},
+ booktitle = {Proceedings of the 1971 ACM SIGFIDET (Now SIGMOD) Workshop on Data Description, Access and Control},
+ series = {SIGFIDET '71},
+ year = {1971},
+ location = {San Diego, California},
+ pages = {35--68},
+ numpages = {34},
+ url = {http://doi.acm.org/10.1145/1734714.1734718},
+ doi = {10.1145/1734714.1734718},
+ acmid = {1734718},
+ publisher = {ACM},
+ address = {New York, NY, USA},
+}
+
+@article{clark1994dfql,
+  title={DFQL: Dataflow query language for relational databases},
+  author={Clark, Gard J and Wu, C Thomas},
+  journal={Information \& management},
+  volume={27},
+  number={1},
+  pages={1--15},
+  year={1994},
+  publisher={Elsevier}
+}
+
+@inproceedings{ambrus2010konduit,
+  title={Konduit vqb: a visual query builder for sparql on the social semantic desktop},
+  author={Ambrus, Oszk{\'a}r and M{\"o}ller, Knud and Handschuh, Siegfried},
+  booktitle={Workshop on Visual Interfaces to the Social and Semantic Web},
+  year={2010}
+}
+
+@incollection{kapetanios2000mddql,
+  title={MDDQL: a visual query language for metadata driven querying},
+  author={Kapetanios, Epaminondas and Norrie, Moira C and Fuhrer-Stakic, D},
+  booktitle={Advances in Visual Information Management},
+  pages={297--316},
+  year={2000},
+  publisher={Springer}
+}
+
+@article{kelly1961block,
+  title={A block diagram compiler},
+  author={Kelly, John L and Lochbaum, Carol and Vyssotsky, Victor A},
+  journal={Bell System Technical Journal, The},
+  volume={40},
+  number={3},
+  pages={669--678},
+  year={1961},
+  publisher={Alcatel-Lucent}
+}
+
+@techreport{mcgraw1983sisal,
+  title={SISAL: streams and iteration in a single-assignment language. Language reference manual, Version 1. 1},
+  author={McGraw, James and Skedzielewski, Stephen and Allan, Stephen and Grit, Dale and Oldehoeft, Rob and Glauert, John and Dobes, Ivan and Hohensee, Paul},
+  year={1983},
+  institution={Lawrence Livermore National Lab., CA (USA)}
+}
+
+@book{ramakrishnan2000dms,
+ author = {Ramakrishnan, Raghu and Gehrke, Johannes},
+ title = {Database Management Systems},
+ year = {2000},
+ isbn = {0072440422},
+ edition = {2nd},
+ publisher = {Osborne/McGraw-Hill},
+ address = {Berkeley, CA, USA},
+} 
