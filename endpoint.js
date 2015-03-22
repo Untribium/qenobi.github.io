@@ -126,7 +126,7 @@ var Source = (function() {
 			this.query = this.parent.getQuery();
 		}
 		else {
-			this.query = undefined;
+			this.query = null;
 		}
 	}
 

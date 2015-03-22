@@ -69,17 +69,22 @@ jsPlumb.ready(function() {
 
 			//no need to call attach, jsPlumb throws an additional 'connection' event
 
-		});		
+		});
 	});
 
-	addNode(Output);
+	addNode(Output, 0.8, 0.5);
 
 });
 
-function addNode(type) {
+//type of node (class) and position (float, 0 to 1)
+function addNode(type, x, y) {
 	var node = new type(node_counter);
 
-	Util.getContainer().appendChild(node.buildUI().getElement());
+	var ui = node.buildUI().getElement();
+	Util.getContainer().appendChild(ui);
+
+	ui.style.left = (x || 0.15)*window.innerWidth+'px';
+	ui.style.top = (y || 0.5)*window.innerHeight-(50+ui.offsetHeight/2)+'px';
 
 	node_counter++;
 }

@@ -57,7 +57,7 @@ var Query = (function() {
 		var result = '';
 
 		result += ind+'SELECT';
-		result += this.distinct ? ' DISTINCT ' : '';
+		result += this.distinct ? ' DISTINCT' : '';
 		result += '\n'+this.getProjection(indent+1);
 		result += '\n'+ind+'FROM\n'+ind_+this.relation.getQuery(indent+1);
 		if(this.condition){
