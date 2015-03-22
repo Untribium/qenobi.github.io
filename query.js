@@ -1,6 +1,7 @@
 var Query = (function() {
 
 	Query.prototype.projection;
+	Query.prototype.distinct;
 	Query.prototype.relation;
 	Query.prototype.condition;
 	Query.prototype.groupBy;
@@ -10,6 +11,8 @@ var Query = (function() {
 	function Query(relation, condition) {
 		this.relation = relation;
 		this.condition = condition;
+
+		this.distinct = false;
 
 		this.groupBy = [];
 		this.projection = [];
@@ -42,12 +45,20 @@ var Query = (function() {
 		this.cardinality = cardinality;
 	}
 
+	Query.prototype.getDistinct = function() { return this.distinct; }
+
+	Query.prototype.setDistinct = function(flag) {
+		this.distinct = flag;
+	}
+
 	Query.prototype.getQuery = function(indent) {
 		var ind = Util.indent(indent || 0);
 		var ind_ = ind+'  ';
 		var result = '';
 
-		result += ind+'SELECT\n'+this.getProjection(indent+1);
+		result += ind+'SELECT';
+		result += this.distinct ? ' DISTINCT ' : '';
+		result += '\n'+this.getProjection(indent+1);
 		result += '\n'+ind+'FROM\n'+ind_+this.relation.getQuery(indent+1);
 		if(this.condition){
 			result += '\n'+ind+'WHERE\n'+ind_+this.condition.getQuery(indent+1);
@@ -95,12 +106,12 @@ var Query = (function() {
 	Query.prototype.clone = function() {
 		var result = new Query(this.relation.clone(), this.condition);
 		result.setCardinality(this.cardinality);
+		result.setDistinct(this.distinct);
 
 		//projection ignored, will always be null on clone
 		//condition not cloned because new attributes not available (ugly, but works)
 
 		return result;
-
 	}
 
 	return Query;

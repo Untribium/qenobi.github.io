@@ -385,7 +385,7 @@ var Aggregation = (function() {
 				this.removeParameter(this.aggregates.pop().getAttribute());
 			}
 
-			this.query = undefined;
+			this.query = null;
 		}
 	}
 
@@ -516,6 +516,38 @@ var Rename = (function() {
 	return Rename;
 
 })();
+
+var Distinct = (function() {
+
+	Distinct.prototype = Object.create(Node.prototype);
+	Distinct.prototype.constructor = Distinct;
+
+	Distinct.prototype.relation;
+
+	function Distinct(id) {
+		Node.call(this, id, true);
+
+		this.title = 'Distinct';
+
+		this.output = new Source(this);
+
+		this.relation = new PRelation(this, UILabel);
+		this.addParameter(this.relation);
+	}
+
+	Distinct.prototype.update = function() {
+		if(this.relation.getQuery()) {
+			this.query = this.relation.getQuery().clone();
+			this.query.setDistinct(true);
+			return this.query;
+		}
+		return null;
+	}
+
+	return Distinct;
+
+})();
+
 
 
 var Output = (function() {

@@ -228,6 +228,12 @@ var PSelection = (function() {
 		this.options = options;
 		if(this.element) {
 			this.element.setOptions(this.options);
+			if(this.options.length <= 1) {
+				this.element.setVisible(false);
+			}
+			else {
+				this.element.setVisible(true);
+			}
 		}
 	}
 
