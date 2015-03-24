@@ -97,7 +97,7 @@ body {
 }
 
 .node:hover {
-	z-index: 1000;
+	z-index: 100;
 
 	box-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
 
@@ -247,6 +247,7 @@ p.uiel {
 
 .square {
 	margin-left: 5px;
+	z-index: 500;
 }
 
 .hidden {
