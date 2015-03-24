@@ -15,6 +15,7 @@
 \usepackage{fancyhdr}
 \usepackage{shadethm}
 \usepackage{makeidx}
+\usepackage{lipsum}
 \usepackage[a4paper,portrait,twoside,inner=3.25cm,outer=3.5cm,top=3.5cm,bottom=4.0cm]{geometry}
 \usepackage{hyperref}
 \usepackage{globis}
@@ -287,7 +288,7 @@ This chapter discusses the theoretical specification of QENoBI, starting with th
 
 \subsection{Test Set}
 \label{sec:test_set}
-In order to accurately establish the requirements for a general-purpose SQL query builder, we compile a set of queries covering the most commonly used features of SQL. This approach is chosen due to the fact that starting directly from the SQL specification is infeasible due to its scope and inconsistencies between vendors. An unbiased test set on the other hand puts the focus on actual real-life demands, covering only the most commonly used features. To meet these requirements, the set was mostly assembled from queries taken from open-source applications. This turned out to be somewhat more involved than expected, as most larger applications make use of object-relational mapping libraries such as Hibernate, JDBC or Ruby on Rails. Therefore, queries are often not available in plain text and would have to be translated manually, which often results in overcomplicated and therefore unrepresentative queries. An overview of the test set is presented in Table~\ref{tab:test_set} while the actual queries can be found in the Appendix. It consists of 20 queries from 6 different sources. The queries are written for a number of different DBMS specifically MySQL, Oracle and Microsoft SQL Server. Additionally, the queries from the book ``Database Management Systems''\cite{ramakrishnan2000dms} are DBMS independent due to their low complexity.
+In order to accurately establish the requirements for a general-purpose SQL query builder, we compile a set of queries covering the most commonly used features of SQL. This approach is chosen due to the fact that starting directly from the SQL specification is infeasible due to its scope and inconsistencies between vendors. An unbiased test set on the other hand puts the focus on actual real-life demands, covering only the most commonly used features. To meet these requirements, the set was mostly assembled from queries taken from open-source applications. This turned out to be somewhat more involved than expected, as most larger applications make use of object-relational mapping libraries such as Hibernate, JDBC or Ruby on Rails. Therefore, queries are often not available in plain text and would have to be translated manually, which often results in overcomplicated and therefore unrepresentative queries. An overview of the test set is presented in Table~\ref{tab:test_set} while the actual queries can be found in the appendix. It consists of 20 queries from 6 different sources. The queries are written for a number of different DBMS specifically MySQL, Oracle and Microsoft SQL Server. Additionally, the queries from the book ``Database Management Systems''\cite{ramakrishnan2000dms} are DBMS independent due to their low complexity.
 
 \begin{table}[h!]
 \centering
@@ -1026,7 +1027,7 @@ Total			& 33					& 14.5					& 18.5				& 27			& 21					& 30		\\
 \label{tab:test_eval}
 \end{table}
 
-As expected, QENoBI performs extremely well on the original test set. 19 out of the 20 queries can be expressed using QENoBI based on the full specification. The remaining query contains a \texttt{DECODE} expression (ORACLE's version of CASE) which is problematic, as it accepts an arbitrary amount of features, which cannot be expressed using the Expression node as specified. The proof-of-concept implementation achieves 14.5 points on the test set, emphasizing its limited functionality with respect to the specification. Nonetheless, it perform significantly better than both EasyQuery and ExtJS which attain 11 and 12.5 points respectively. It loses points for a number of different reasons, most prominently however due to the lack of expression support.
+As expected, QENoBI performs extremely well on the original test set. 19 out of the 20 queries can be expressed using QENoBI based on the full specification. The remaining query contains a \texttt{DECODE} expression (Oracle's version of CASE) which is problematic, as it accepts an arbitrary amount of features, which cannot be expressed using the Expression node as specified. The proof-of-concept implementation achieves 14.5 points on the test set, emphasizing its limited functionality with respect to the specification. Nonetheless, it perform significantly better than both EasyQuery and ExtJS which attain 11 and 12.5 points respectively. It loses points for a number of different reasons, most prominently however due to the lack of expression support.
 
 As mentioned in Section~\ref{sec:eval_set}, the queries in the evaluation set are more complex on average. This is mirrored in the test results, with all query builders covering a lower percentage of the queries. EasyQuery in particular only attains 3.5 out of 13 points which is mostly due to its rigid architecture, which for instance restricts the join operations possible. ExtJS and the implementation of QENoBI both cover roughly half of the queries. Interestingly though, the distribution of points differs quite significantly. ExtJS doesn't support complex constructs such as subqueries or set operations and consequently loses many points on structurally complex queries. QENoBI on the other hand, supports all these constructs but, as implemented, lacks expression support which results in a number of inexpressible queries. Taking the full specification into account, QENoBI performs significantly better. As with the test set, the only cases it cannot express are complicated expressions. In particular, the query in Listing~\ref{lst:project_constant} cannot be expressed in QENoBI. The issue is not located in the second column, as one might suspect, but the third. Specifically, the third column is projected ``out of thin air'' which cannot be expressed using the nodes as specified due to the fact that an expression node always replaces the columns it operates on.
 
@@ -1051,7 +1052,7 @@ Based on the evaluation set we also evaluate QENoBI on the list of features in T
 Projection					& \tc{g}{yes}		& \tc{o}{partial}	& \tc{g}{yes}		&&&	\tc{g}{yes}			\\
 Selection					& \tc{g}{yes}		& \tc{g}{yes}		& \tc{g}{yes}		&&&	\tc{g}{yes}			\\
 Rename						& \tc{g}{yes}		& \tc{g}{yes}		& \tc{g}{yes}		&&&	\tc{g}{yes}			\\
-Natural Join				& \tc{o}{implicit}	& \tc{r}{no}		& \tc{o}{possible}	&&&	\tc{r}{possible}	\\
+Natural Join				& \tc{o}{implicit}	& \tc{r}{no}		& \tc{o}{possible}	&&&	\tc{o}{possible}	\\
 $\theta$-Join				& \tc{o}{implicit}	& \tc{o}{partial}	& \tc{g}{yes}		&&&	\tc{g}{yes}			\\
 Outer Join					& \tc{o}{implicit}	& \tc{g}{yes}		& \tc{o}{possible}	&&&	\tc{g}{yes}			\\
 Semi/Anti-Join				& \tc{r}{no}		& \tc{r}{no}		& \tc{o}{possible}	&&&	\tc{o}{not impl.}	\\
@@ -1063,7 +1064,7 @@ Set Operations				& \tc{r}{no}		& \tc{r}{no}		& \tc{g}{yes}		&&&	\tc{g}{yes}			\
 Expressions					& \tc{r}{no}		& \tc{g}{yes}		& \tc{g}{yes}		&&&	\tc{o}{not impl.}	\\
 Sort						& \tc{g}{yes}		& \tc{g}{yes}		& \tc{g}{yes}		&&& \tc{o}{not impl.}	\\
 Limit						& \tc{r}{no}		& \tc{r}{no}		& \tc{o}{possible}	&&&	\tc{o}{not impl.}	\\
-Distinct					& \tc{r}{no}		& \tc{r}{no}		& \tc{i}{}			&&&	\tc{o}{yes}			\\
+Distinct					& \tc{r}{no}		& \tc{r}{no}		& \tc{i}{}			&&&	\tc{g}{yes}			\\
 \midrule
 \textbf{Usability}			&					&					&					&&&						\\
 Visual						& \tc{r}{low}		& \tc{o}{medium}	& \tc{g}{high}		&&&	\tc{g}{high}		\\
@@ -1169,15 +1170,16 @@ The main issue of the approach discussed so far is that it could only show diffe
 While the implementation discussed in this thesis works well to demonstrate the viability of the concept, it lacks a number of the features described in the specification. Therefore, the logical next step is an implementation that covers the entire specification. This could not be done on the architecture of the proof-of-concept implementation as it is neither powerful nor flexible enough to support subnodes and specifically deferred typing. While an architecture based on the current one could be used, other concepts could be examined as well. For instance, while the proof-of-concept implementation passes information bottom-up, one could imagine an approach that works top-down, i.e. starts at the root. A purely functional implementation would also be highly interesting, due to the close relation of functional programming languages and the dataflow programming paradigm.
 
 \subsection{Extensions}
-Currently, QENoBI is limited to generating queries from a single, pre-defined schema and therefore not very practical at all. In order to be of practical use, it would have to be able to handle arbitrary, user-defined schemas or, if possible, even connect to the database directly.
+Currently, QENoBI is limited to generating queries from a single, pre-defined schema and therefore not very practical at all. In order to be of practical use, it would have to be able to handle arbitrary, user-defined schemas or, if possible, even be connected to the database directly.
 
-One of the major advantages of subnodes is that they can be used to abstract on the primitive operators of the relational algebra and SQL. However, in order to be able create a subnode, the user still needs to understand them. Since QENoBI is a web-application, it would therefore be interesting to implement a feature to share subnodes among users. Using this feature, experienced users could create subnodes such as the Maximize subnode discussed in Section~\ref{sec:subnodes} and provide them to users who are unfamiliar with SQL. This could eventually result in a completely redesigned visual query language that doesn't use any of the primitives nodes but still translates directly into SQL.
+One of the major advantages of subnodes is that they can be used to abstract on the primitive operators of the relational algebra and SQL. However, in order to be able to create a subnode, the user still needs to understand them. Since QENoBI is a web-application, it would therefore be interesting to implement a feature to share subnodes among users. Using this feature, experienced users could create subnodes such as the Maximize subnode discussed in Section~\ref{sec:subnodes} and provide them to users who are unfamiliar with SQL. This could eventually result in a completely redesigned visual query language that doesn't use any of the primitives nodes but still translates directly into SQL.
 
 \section{Final Words}
 In many ways, the process of developing QENoBI turned out to be harder than I expected it to be. Within days of starting the project, I realized that the approach I had in mind wasn't going to work. Upon settling on a new, more powerful approach, I discovered a paper about a dataflow query language, DFQL, which was based on that exact concept. As a result, the focus changed from raw power to a combination of power and usability. Ultimately, I am very happy with the results. The concept of subnodes is very promising and the implementation of this concept in QENoBI is elegant and lightweight but maintains the entire expressiveness of the idea.
 
+\lipsum[1]
 \appendix
-\chapter*{Appendix}
+\chapter{Query Set}
 \label{app:test_set}
 
 \section*{Test Set}
