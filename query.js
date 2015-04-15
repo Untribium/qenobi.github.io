@@ -274,7 +274,13 @@ var Subquery = (function() {
 
 	Subquery.prototype.clone = function() {
 		var clone = new Subquery(this.query, this.alias);
-		//don't clone query, won't be changed
+		clone.attributes = [];
+
+		for(var i = 0; i < this.attributes.length; i++) {
+			var attribute = this.attributes[i].clone();
+			attribute.setRelation(clone);
+			clone.addAttribute(attribute);
+		}
 
 		return clone;
 	}

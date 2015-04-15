@@ -539,9 +539,7 @@ var Distinct = (function() {
 		if(this.relation.getQuery()) {
 			this.query = this.relation.getQuery().clone();
 			this.query.setDistinct(true);
-			return this.query;
 		}
-		return null;
 	}
 
 	return Distinct;
